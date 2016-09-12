@@ -52,21 +52,10 @@ while(cap.isOpened()):
     
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))), font, 2,(255,255,255))
-    cv2.imshow('frame',gray)
     cv2.createTrackbar('Frames','frame',0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)),onChanged)
     cv2.setTrackbarPos('Frames','frame',int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)))
-    #Reading the first frame
-    (grabbed, frame) = cap.read()
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-
-
-    ret, frame = cap.read()
     
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    cv2.createTrackbar('Frames','frame',0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)),onChanged)
-    cv2.setTrackbarPos('Frames','frame',int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)))
-    cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(100,100), font, 5,(0,0,0))
     
     if cv2.waitKey(1) & 0xFF == ord('p'):
         if pause:
