@@ -86,12 +86,12 @@ while(cap.isOpened()):
 
     #drawing line
     if startPoint == True and endPoint == True:
-        cv2.line(frame, (rect[0], rect[1]), (rect[2], rect[3]), (255, 0, 255), 2)
-        cv2.circle(frame, (rect[0], rect[1]), 50, (255, 0, 255), -1)
+        cv2.line(gray, (rect[0], rect[1]), (rect[2], rect[3]), (255, 0, 255), 2)
+        cv2.circle(gray, (rect[0], rect[1]), 50, (255, 0, 255), -1)
 
-    cv2.imshow('frame',frame)
+    cv2.imshow('frame', gray)
 
-    key = cv2.waitKey(waitTime)
+    key = cv2.waitKey(1)
     """End"""
 
 
