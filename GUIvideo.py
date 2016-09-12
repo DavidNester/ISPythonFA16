@@ -7,9 +7,14 @@ Function called when track bar is moved
 Changes video frame along with movement
 """
 def onChanged(x):
+    #set video to frame corresponding to slider bar
     cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,x)
     err,img = cap.read()
-    cv2.imshow('frame', img)
+    #switch to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #add frame number
+    cv2.putText(gray,str(x),(0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))), font, 2,(255,255,255))
+    cv2.imshow('frame', gray)
 
 
 
@@ -47,12 +52,16 @@ cap = cv2.VideoCapture('pendulum.MOV')
 waitTime = 50
                 
 while(cap.isOpened()):
+    #get next frame if not paused
     if not pause:
         ret, frame = cap.read()
-    
+    #switch to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #add frame number to video
     cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))), font, 2,(255,255,255))
+    #create trackbar with length = to the number of frames, linked to onChanged function
     cv2.createTrackbar('Frames','frame',0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)),onChanged)
+    #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)))
 
     
@@ -64,9 +73,6 @@ while(cap.isOpened()):
             pause = True
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
-
-
 
     """Code for drawing on video"""
 
