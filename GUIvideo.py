@@ -119,7 +119,13 @@ def getFrame():
                 counter = 0
             else:
                 counter += 1
-
+"""Code for creating windows"""
+# QApplication created only here.
+app = QtGui.QApplication([])
+window = MyWindow()
+window.show()
+"""End"""
+        
 while(cap.isOpened()):
     if cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) == cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES):
         finalFrame = True
@@ -156,21 +162,16 @@ while(cap.isOpened()):
             speed /= 2
     #drawing options
     if cv2.waitKey(1) & 0xFF == ord('t'):
-        """Code for creating windows"""
-        # QApplication created only here.
-        app = QtGui.QApplication([])
-        window = MyWindow()
         window.show()
-        """End"""
+
 
     """Code for drawing on video"""
-
     #drawing line
     if startPoint == True and endPoint == True:
         if option == 2:
-            cv2.line(gray, (rect[0], rect[1]), (rect[2], rect[3]), color, 2)
+            cv2.line(gray, (rect[0]/2, rect[1]/2), (rect[2]/2, rect[3]/2), color, 2)
         elif option == 1:
-            cv2.circle(gray, (rect[0], rect[1]), 50, color, -1)
+            cv2.circle(gray, (rect[0]/2, rect[1]/2), 50, color, -1)
         
     for i in range(1+(height/100)):
         cv2.line(gray,(0,i*100),(width,i*100),(0,255,255),1)
