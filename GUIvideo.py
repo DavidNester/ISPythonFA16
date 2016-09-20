@@ -119,7 +119,7 @@ def getFrame():
                 counter = 0
             else:
                 counter += 1
-"""Code for creating windows"""
+#Code for creating windows
 # QApplication created only here.
 app = QtGui.QApplication([])
 window = MyWindow()
