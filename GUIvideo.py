@@ -87,20 +87,32 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 pause = False
 cap = cv2.VideoCapture('pendulum.MOV')
 frameMemory = []
-#offset so that dont have to subtract 1 every time we access a frame
+#offset so that we dont have to subtract 1 every time we access a frame
 frameMemory += [-1]
 
 height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 
+#variables used to control speed of playback
+speed = 1
+#counts up to speed variable. next frame is returned when counter = speed
+counter = 0
+#wrapper function to get next frame that throttles based on speed variable and counter
+def getFrame():
+    global counter, frame
+    #if not paused get frame
+    if not pause:
+        if (counter + 1) == speed:
+            ret, frame = cap.read()
+            counter = 0
+        else:
+            counter += 1
 
 
 while(cap.isOpened()):
-    global option, color
+    #global option, color
     cv2.namedWindow('frame')
-    #get next frame if not paused
-    if not pause:
-        ret, frame = cap.read()
+    getFrame()
     #switch to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #add frame number to video
@@ -111,14 +123,23 @@ while(cap.isOpened()):
     cv2.setTrackbarPos('Frames','frame',int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)))
     
     cv2.setMouseCallback('frame', on_mouse) 
-    
+    #pause
     if cv2.waitKey(1) & 0xFF == ord('p'):
         if pause:
             pause = False
         else:
             pause = True
+    #quit
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    #slower
+    if cv2.waitKey(1) & 0xFF == ord('w'):
+        speed *= 2
+    #faster
+    if cv2.waitKey(1) & 0xFF == ord('e'):
+        if speed != 1:
+            speed /= 2
+    #drawing options
     if cv2.waitKey(1) & 0xFF == ord('t'):
         """Code for creating windows"""
         # QApplication created only here.
