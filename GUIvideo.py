@@ -50,9 +50,9 @@ def lineChoice():
     global option
     option = 2
 
-def redColor():
+def blackColor():
     global color
-    color = (255,0,0)
+    color = (0,0,0)
 
 def whiteColor():
     global color
@@ -65,7 +65,7 @@ class MyWindow(QtGui.QDialog):    # any super class is okay
         layout = QtGui.QGridLayout()
         circleButton = QtGui.QPushButton('Circle')
         lineButton = QtGui.QPushButton('Line')
-        redButton = QtGui.QPushButton('Red')
+        blackButton = QtGui.QPushButton('Black')
         whiteButton = QtGui.QPushButton('White')
         label1 = QtGui.QLabel("Shape")
         label2 = QtGui.QLabel("Color")
@@ -73,11 +73,11 @@ class MyWindow(QtGui.QDialog):    # any super class is okay
         layout.addWidget(circleButton ,1,0)
         layout.addWidget(lineButton ,1,1)
         layout.addWidget(label2, 2, 0)
-        layout.addWidget(redButton,3,0)
+        layout.addWidget(blackButton,3,0)
         layout.addWidget(whiteButton,3,1)
         circleButton.clicked.connect(circleChoice)
         lineButton.clicked.connect(lineChoice)
-        redButton.clicked.connect(redColor)
+        blackButton.clicked.connect(blackColor)
         whiteButton.clicked.connect(whiteColor)
         self.setLayout(layout)
         self.setWindowTitle("Toolbar");
@@ -161,7 +161,6 @@ while(cap.isOpened()):
         app = QtGui.QApplication([])
         window = MyWindow()
         window.show()
-        app.exec_()
         """End"""
 
     """Code for drawing on video"""
