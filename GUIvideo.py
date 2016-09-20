@@ -9,6 +9,7 @@ Changes video frame along with movement
 """
 def onChanged(x):
     global finalFrame
+    #allow video to start again after movement if we have reached the final frame
     finalFrame = False
     #set video to frame corresponding to slider bar
     cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,x)
@@ -84,7 +85,12 @@ class MyWindow(QtGui.QDialog):    # any super class is okay
         # here put the code that creates the new window and shows it.
         child = MyWindow(self)
         child.show()
-        
+while True:
+    try:
+        fps = int(raw_input("How many frames per second does the video have? "))
+        break
+    except:
+        print "Please enter an Integer value"
 font = cv2.FONT_HERSHEY_SIMPLEX
 pause = False
 cap = cv2.VideoCapture('pendulum.MOV')
@@ -104,8 +110,9 @@ counter = 0
 #wrapper function to get next frame that throttles based on speed variable and counter
 def getFrame():
     global counter, frame
-    #if not paused get frame
+    #stop getting new frames if we are on the final frame
     if not finalFrame:
+        #if not paused get frame
         if not pause:
             if (counter + 1) == speed:
                 ret, frame = cap.read()
@@ -123,6 +130,8 @@ while(cap.isOpened()):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #add frame number to video
     cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), font, 2,(255,255,255))
+    #add seconds to video
+    cv2.putText(gray,str("{0:.2f}".format(float(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)/float(fps))))+'s',(0,height-50), font, 1,(255,255,255))
     #create trackbar with length = to the number of frames, linked to onChanged function
     cv2.createTrackbar('Frames','frame',0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)),onChanged)
     #sets the trackbar position equal to the frame number
@@ -168,6 +177,8 @@ while(cap.isOpened()):
         cv2.line(gray,(0,i*100),(width,i*100),(0,255,255),1)
     for i in range(1+(width/100)):
         cv2.line(gray,(i*100,0),(i*100,height),(0,255,255),1)
+        
+    gray = cv2.resize(gray,(0,0),fx=2,fy=2)
     cv2.imshow('frame', gray)
     #put frame in memory array indexed by frame number
     frameMemory += [gray]
