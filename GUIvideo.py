@@ -8,6 +8,8 @@ Function called when track bar is moved
 Changes video frame along with movement
 """
 def onChanged(x):
+    global finalFrame
+    finalFrame = False
     #set video to frame corresponding to slider bar
     cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,x)
     err,img = cap.read()
@@ -93,6 +95,8 @@ frameMemory += [-1]
 height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 
+finalFrame = False
+
 #variables used to control speed of playback
 speed = 1
 #counts up to speed variable. next frame is returned when counter = speed
@@ -101,15 +105,17 @@ counter = 0
 def getFrame():
     global counter, frame
     #if not paused get frame
-    if not pause:
-        if (counter + 1) == speed:
-            ret, frame = cap.read()
-            counter = 0
-        else:
-            counter += 1
-
+    if not finalFrame:
+        if not pause:
+            if (counter + 1) == speed:
+                ret, frame = cap.read()
+                counter = 0
+            else:
+                counter += 1
 
 while(cap.isOpened()):
+    if cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) == cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES):
+        finalFrame = True
     #global option, color
     cv2.namedWindow('frame')
     getFrame()
