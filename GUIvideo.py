@@ -119,7 +119,7 @@ def getFrame():
                 counter = 0
             else:
                 counter += 1
-
+ret,frame = cap.read()
 while(cap.isOpened()):
     if cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) == cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES):
         finalFrame = True
