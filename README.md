@@ -11,8 +11,16 @@ Projects for Python Projects Independent Study
 
 
 <u>Kyle</u>
-- Download Python 2.7
-
+- Draw an overlay on top of video for drawing
+- Video loading (tkinter)
 
 <u>David</u>
-- Everything else
+- Button response
+- Variable speed
+
+<u>Both</u>
+- Scaling
+- Object Tracking
+    * Shapen- Circular Hough
+    * Color
+    * Edge
