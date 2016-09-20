@@ -92,7 +92,7 @@ while True:
     except:
         print "Please enter an Integer value"
 font = cv2.FONT_HERSHEY_SIMPLEX
-pause = False
+pause = True
 cap = cv2.VideoCapture('pendulum.MOV')
 frameMemory = []
 #offset so that we dont have to subtract 1 every time we access a frame
@@ -128,6 +128,7 @@ while(cap.isOpened()):
     getFrame()
     #switch to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #gray = cv2.resize(gray,(0,0),fx=2,fy=2)
     #add frame number to video
     cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), font, 2,(255,255,255))
     #add seconds to video
