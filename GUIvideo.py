@@ -114,7 +114,7 @@ def getFrame():
     if not finalFrame:
         #if not paused get frame
         if not pause:
-            if (counter + 1) == speed:
+            if (counter + 1) >= speed:
                 ret, frame = cap.read()
                 counter = 0
             else:
@@ -143,25 +143,30 @@ while(cap.isOpened()):
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)))
     
-    cv2.setMouseCallback('frame', on_mouse) 
+    cv2.setMouseCallback('frame', on_mouse)
+    
+    #get button press
+    key = cv2.waitKey(1) & 0xFF
     #pause
-    if cv2.waitKey(1) & 0xFF == ord('p'):
+    if key == ord('p'):
         if pause:
             pause = False
         else:
             pause = True
     #quit
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if key == ord('q'):
         break
     #slower
-    if cv2.waitKey(1) & 0xFF == ord('w'):
+    if key == ord('w'):
         speed *= 2
+        print speed
     #faster
-    if cv2.waitKey(1) & 0xFF == ord('e'):
+    if key == ord('e'):
         if speed != 1:
-            speed /= 2
+            speed = speed/2
+        print speed
     #drawing options
-    if cv2.waitKey(1) & 0xFF == ord('t'):
+    if key == ord('t'):
         window.show()
 
 
