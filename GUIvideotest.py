@@ -3,6 +3,9 @@ import numpy as np
 import cv2
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+import Tkinter
+import tkFileDialog
+import os
 
 """
 Function called when track bar is moved
@@ -13,6 +16,14 @@ def onChanged(x):
     finalFrame = False
     currentFrame = x
 
+"""Code for retrieving file name"""
+root = Tkinter.Tk()
+root.withdraw() #use to hide tkinter window
+
+currdir = os.getcwd() #sets current directory
+tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
+                                                         ,("HTML files", "*.html;*.htm")
+                                                         ,("All files", "*.*"))) #requests file name and type of files
 
 rect = (0,0,0,0)
 startPoint = False
@@ -87,7 +98,7 @@ while True:
         print "Please enter an Integer value"
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-cap = cv2.VideoCapture('pendulum.MOV')
+cap = cv2.VideoCapture(tempdir)
 
 height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
