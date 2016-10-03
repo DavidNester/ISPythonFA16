@@ -174,6 +174,21 @@ while(cap.isOpened()):
     gray = memory[currentFrame]
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
+    
+    
+    circles = cv2.HoughCircles(gray, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
+    if circles is not None:
+        # convert the (x, y) coordinates and radius of the circles to integers
+        circles = np.round(circles[0, :]).astype("int")
+ 
+        # loop over the (x, y) coordinates and radius of the circles
+        for (x, y, r) in circles:
+            # draw the circle in the output image, then draw a rectangle
+            # corresponding to the center of the circle
+            cv2.circle(gray, (x, y), r, (228, 20, 20), 4)
+            cv2.rectangle(gray, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+    
+    
     """Code for drawing on video"""
     #drawing line
     if startPoint == True and endPoint == True:
