@@ -2,6 +2,9 @@ import numpy as np
 import cv2
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+import Tkinter
+import tkFileDialog
+import os
 
 """
 Function called when track bar is moved
@@ -20,6 +23,15 @@ def onChanged(x):
     cv2.putText(gray,str(x),(0,int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))), font, 2,(255,255,255))
 
 
+"""Code for retrieving file name"""
+root = Tkinter.Tk()
+root.withdraw() #use to hide tkinter window
+
+currdir = os.getcwd() #sets current directory
+tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
+                                                         ,("HTML files", "*.html;*.htm")
+                                                         ,("All files", "*.*"))) #requests file name and type of files
+    
 rect = (0,0,0,0)
 startPoint = False
 endPoint = False
@@ -52,7 +64,7 @@ def lineChoice():
 
 def blackColor():
     global color
-    color = (0,0,0)
+    color = (0, 255,0)
 
 def whiteColor():
     global color
@@ -93,7 +105,7 @@ while True:
         print "Please enter an Integer value"
 font = cv2.FONT_HERSHEY_SIMPLEX
 pause = False
-cap = cv2.VideoCapture('pendulum.MOV')
+cap = cv2.VideoCapture(tempdir) #open file from the selected before
 frameMemory = []
 #offset so that we dont have to subtract 1 every time we access a frame
 frameMemory += [-1]
@@ -125,15 +137,23 @@ app = QtGui.QApplication([])
 window = MyWindow()
 window.show()
 """End"""
-        
+
+overlay = cv2.imread("C:/Users/Kyle/Documents/GitHub/ISPythonFA16/overlay2.png", 1)
+
 while(cap.isOpened()):
     if cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) == cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES):
         finalFrame = True
     #global option, color
     cv2.namedWindow('frame')
     getFrame()
+
+
+    cv2.addWeighted(overlay, .90, frame, .10, 0, frame)
+    
     #switch to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    
+    
     #add frame number to video
     cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), font, 2,(255,255,255))
     #add seconds to video
@@ -174,9 +194,9 @@ while(cap.isOpened()):
     #drawing line
     if startPoint == True and endPoint == True:
         if option == 2:
-            cv2.line(gray, (rect[0]/2, rect[1]/2), (rect[2]/2, rect[3]/2), color, 2)
+            cv2.line(overlay, (rect[0]/2, rect[1]/2), (rect[2]/2, rect[3]/2), color, 2)
         elif option == 1:
-            cv2.circle(gray, (rect[0]/2, rect[1]/2), 50, color, -1)
+            cv2.circle(overlay, (rect[0]/2, rect[1]/2), 50, color, -1)
         
     for i in range(1+(height/100)):
         cv2.line(gray,(0,i*100),(width,i*100),(0,255,255),1)
