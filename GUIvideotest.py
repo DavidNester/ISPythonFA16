@@ -9,7 +9,8 @@ Function called when track bar is moved
 Changes video frame along with movement
 """
 def onChanged(x):
-    global currentFrame
+    global currentFrame,finalFrame
+    finalFrame = False
     currentFrame = x
 
 
@@ -120,8 +121,8 @@ for i in range(length):
   
 """advances current frame and considers pause and speed"""  
 def advance():
-    global currentFrame
-    if not pause:
+    global finalFrame,currentFrame,pause
+    if not pause and not finalFrame:
         if speed == 0:
             currentFrame += 1
         elif speed > 0:
@@ -133,7 +134,8 @@ def advance():
     
 currentFrame = 1
 speed = 0
-pause = False
+finalFrame = False
+pause = True #video starts paused
 cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
@@ -141,9 +143,7 @@ cv2.setMouseCallback('frame', on_mouse)
 
 while(cap.isOpened()):
     if currentFrame >= length-1:
-        pause = True
-    else:
-        pause = False
+        finalFrame = True
     
     advance()
     
