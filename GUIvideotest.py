@@ -17,6 +17,7 @@ def onChanged(x):
     currentFrame = x
 
 """Code for retrieving file name"""
+
 root = Tkinter.Tk()
 root.withdraw() #use to hide tkinter window
 
@@ -24,7 +25,7 @@ currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
                                                          ,("All files", "*.*"))) #requests file name and type of files
-
+root.destroy()
 rect = (0,0,0,0)
 startPoint = False
 endPoint = False
@@ -99,7 +100,6 @@ while True:
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 cap = cv2.VideoCapture(tempdir)
-
 height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 
@@ -114,7 +114,7 @@ length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 """stores all the frames in an array and puts some information on them"""
 memory = [-1]
 print "Processing video...May take a few seconds"
-for i in range(length):
+for j in range(length):
     ret,frame = cap.read()
     #switch to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -129,11 +129,13 @@ for i in range(length):
         cv2.line(gray,(i*100,0),(i*100,height),(0,255,255),1)
     gray = cv2.resize(gray,(0,0),fx=2,fy=2)
     memory += [gray]
+
   
 """advances current frame and considers pause and speed"""  
 def advance():
-    global finalFrame,currentFrame,pause
+    global finalFrame,currentFrame,pause,drawn
     if not pause and not finalFrame:
+        drawn = False
         if speed == 0:
             currentFrame += 1
         elif speed > 0:
@@ -147,12 +149,14 @@ currentFrame = 1
 speed = 0
 finalFrame = False
 pause = True #video starts paused
+drawn = False#if circle has been drawn on page
 cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
 
 while(cap.isOpened()):
+    
     if currentFrame >= length-1:
         finalFrame = True
     
@@ -193,12 +197,13 @@ while(cap.isOpened()):
         circles = np.round(circles[0, :]).astype("int")
  
         # loop over the (x, y) coordinates and radius of the circles
-        for (x, y, r) in circles:
-            # draw the circle in the output image, then draw a rectangle
-            # corresponding to the center of the circle
-            cv2.circle(gray, (x, y), r, (228, 20, 20), 4)
-            cv2.rectangle(gray, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-    
+        if not drawn:
+            for (x, y, r) in circles:
+                # draw the circle in the output image, then draw a rectangle
+                # corresponding to the center of the circle
+                cv2.circle(gray, (x, y), r, (228, 20, 20), 4)
+                cv2.rectangle(gray, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+            drawn = True
     
     """Code for drawing on video"""
     #drawing line
@@ -206,7 +211,8 @@ while(cap.isOpened()):
         if option == 2:
             cv2.line(gray, (rect[0], rect[1]), (rect[2], rect[3]), color, 2)
         elif option == 1:
-            cv2.circle(gray, (rect[0], rect[1]), 50, color, -1)    
+            cv2.circle(gray, (rect[0], rect[1]), 50, color, -1)
+
     cv2.imshow('frame', gray)
 
     
