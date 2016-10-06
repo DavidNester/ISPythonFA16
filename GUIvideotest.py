@@ -155,7 +155,7 @@ for j in range(length):
   
 """advances current frame and considers pause and speed"""  
 def advance():
-    global finalFrame,currentFrame,pause,drawn
+    global finalFrame,currentFrame,pause,drawn,framesSinceLastCircle
     if not pause and not finalFrame:
         drawn = False
         if speed == 0:
@@ -164,12 +164,28 @@ def advance():
         elif speed > 0:
             if currentFrame + speed**2 < length:
                 currentFrame += speed**2
+                currentFrame += speed**2-1
         elif speed < 0:
             for i in range(speed**2):
                 time.sleep(.1)
             if currentFrame + 1 < length:
                 currentFrame += 1
-                
+
+"""checks to see if a circle is in a reasonable place based on the previous circle"""
+def normal(x,y,r):
+    #TODO: find better way to normalize the radius other than arbitrary number
+    #TODO: consider situation that first circle is bad
+    global circleCoords,framesSinceLastCircle
+    if len(circleCoords) == 0:
+        return True
+    oldX,oldY,oldR = circleCoords[-1]
+    if abs(oldX-x) < oldR and abs(oldY-y) < oldR and abs(oldR-r) < 30:
+        return True
+    olderX,olderY,olderR = circleCoords[-2]
+    if abs(((oldX-olderX)*framesSinceLastCircle+oldX)-x)<oldR:
+        return True
+    return False
+
     
 currentFrame = 1
 speed = 0
@@ -181,6 +197,7 @@ cv2.namedWindow('frame')
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
 circleCoords = []
+framesSinceLastCircle = 0
 
 while(cap.isOpened()):
     
@@ -222,12 +239,16 @@ while(cap.isOpened()):
         # loop over the (x, y) coordinates and radius of the circles
         if not drawn:
             for (x, y, r) in circles:
-                circleCoords += [(x,y,r)]
-                # draw the circle in the output image, then draw a rectangle
-                # corresponding to the center of the circle
-                cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
-                cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                if normal(x,y,r):
+                    circleCoords += [(x,y,r)]
+                    # draw the circle in the output image, then draw a rectangle
+                    # corresponding to the center of the circle
+                    cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+                    cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             drawn = True
+        framesSinceLastCircle = 0
+    else:
+        framesSinceLastCircle += 1
     
     """Code for drawing on video"""
     #drawing line
