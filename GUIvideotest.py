@@ -7,14 +7,6 @@ import Tkinter
 import tkFileDialog
 import os
 
-"""
-Function called when track bar is moved
-Changes video frame along with movement
-"""
-def onChanged(x):
-    global currentFrame,finalFrame
-    finalFrame = False
-    currentFrame = x
 
 """Code for retrieving file name"""
 
@@ -26,6 +18,7 @@ tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
                                                          ,("All files", "*.*"))) #requests file name and type of files
 root.destroy()
+
 rect = (0,0,0,0)
 startPoint = False
 endPoint = False
@@ -111,24 +104,53 @@ window = MyWindow()
 """End"""
 length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
+"""
+Function called when track bar is moved
+Changes video frame along with movement
+"""
+def onChanged(x):
+    global currentFrame,finalFrame
+    finalFrame = False
+    currentFrame = x
+
+"""returns the (minimum,maximum) x values of the centers of the circles"""
+def extremesX():
+    global circleCoords
+    minimum = float("inf")
+    maximum = float("-inf")
+    
+    for (x,y,r) in circleCoords:
+        minimum = min(minimum,x)
+        maximum = max(maximum,x)
+    return (minimum,maximum)
+
+"""returns the (minimum,maximum) y values of the centers of the circles"""
+def extremesY():
+    global circleCoords
+    minimum = float("inf")
+    maximum = float("-inf")
+    
+    for (x,y,r) in circleCoords:
+        minimum = min(minimum,y)
+        maximum = max(maximum,y)
+    return (minimum,maximum)
+
 """stores all the frames in an array and puts some information on them"""
 memory = [-1]
 print "Processing video...May take a few seconds"
 for j in range(length):
     ret,frame = cap.read()
-    #switch to grayscale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #add frame number to video
-    cv2.putText(gray,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), font, 2,(255,255,255))
-    #add seconds to video
-    cv2.putText(gray,str("{0:.2f}".format(float(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)/float(fps))))+'s',(0,height-50), font, 1,(255,255,255))
     
+    #add frame number to video
+    cv2.putText(frame,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), font, 2,(255,255,255))
+    #add seconds to video
+    cv2.putText(frame,str("{0:.2f}".format(float(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)/float(fps))))+'s',(0,height-50), font, 1,(255,255,255))
     for i in range(1+(height/100)):
-        cv2.line(gray,(0,i*100),(width,i*100),(0,255,255),1)
+        cv2.line(frame,(0,i*100),(width,i*100),(0,0,0),1)
     for i in range(1+(width/100)):
-        cv2.line(gray,(i*100,0),(i*100,height),(0,255,255),1)
-    gray = cv2.resize(gray,(0,0),fx=2,fy=2)
-    memory += [gray]
+        cv2.line(frame,(i*100,0),(i*100,height),(0,0,0),1)
+    frame = cv2.resize(frame,(0,0),fx=2,fy=2)
+    memory += [frame]
 
   
 """advances current frame and considers pause and speed"""  
@@ -137,13 +159,17 @@ def advance():
     if not pause and not finalFrame:
         drawn = False
         if speed == 0:
-            currentFrame += 1
+            if currentFrame + 1 < length:
+                currentFrame += 1
         elif speed > 0:
-            currentFrame += speed**2
+            if currentFrame + speed**2 < length:
+                currentFrame += speed**2
         elif speed < 0:
             for i in range(speed**2):
                 time.sleep(.1)
-            currentFrame += 1
+            if currentFrame + 1 < length:
+                currentFrame += 1
+                
     
 currentFrame = 1
 speed = 0
@@ -154,14 +180,11 @@ cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
+circleCoords = []
 
 while(cap.isOpened()):
     
-    if currentFrame >= length-1:
-        finalFrame = True
-    
     advance()
-    
     
     #get button press
     key = cv2.waitKey(1) & 0xFF
@@ -186,12 +209,12 @@ while(cap.isOpened()):
     if key == ord('t'):
         window.show()
 
-    gray = memory[currentFrame]
+    frame = memory[currentFrame]
+    
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
-    
-    
-    circles = cv2.HoughCircles(gray, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
+    """registers circles and draws them"""
+    circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
         circles = np.round(circles[0, :]).astype("int")
@@ -199,21 +222,22 @@ while(cap.isOpened()):
         # loop over the (x, y) coordinates and radius of the circles
         if not drawn:
             for (x, y, r) in circles:
+                circleCoords += [(x,y,r)]
                 # draw the circle in the output image, then draw a rectangle
                 # corresponding to the center of the circle
-                cv2.circle(gray, (x, y), r, (228, 20, 20), 4)
-                cv2.rectangle(gray, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+                cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             drawn = True
     
     """Code for drawing on video"""
     #drawing line
     if startPoint == True and endPoint == True:
         if option == 2:
-            cv2.line(gray, (rect[0], rect[1]), (rect[2], rect[3]), color, 2)
+            cv2.line(frame, (rect[0], rect[1]), (rect[2], rect[3]), color, 2)
         elif option == 1:
-            cv2.circle(gray, (rect[0], rect[1]), 50, color, -1)
+            cv2.circle(frame, (rect[0], rect[1]), 50, color, -1)
 
-    cv2.imshow('frame', gray)
+    cv2.imshow('frame', frame)
 
     
     
