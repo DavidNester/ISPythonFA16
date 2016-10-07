@@ -173,16 +173,18 @@ def advance():
 
 """checks to see if a circle is in a reasonable place based on the previous circle"""
 def normal(x,y,r):
-    #TODO: find better way to normalize the radius other than arbitrary number
     #TODO: consider situation that first circle is bad
-    global circleCoords,framesSinceLastCircle
+    global circleCoords,framesSinceLastCircle,normalizedRadius
+    normalizedRadius = ((normalizedRadius[0]*normalizedRadius[1]+r)/normalizedRadius[1]+1,normalizedRadius[1]+1)
     if len(circleCoords) == 0:
         return True
     oldX,oldY,oldR = circleCoords[-1]
-    if abs(oldX-x) < oldR and abs(oldY-y) < oldR and abs(oldR-r) < 30:
+    if abs(oldX-x) < oldR and abs(oldY-y) < oldR:
+        return True
+    if abs(normalizedRadius[0]-r) < 20:
         return True
     olderX,olderY,olderR = circleCoords[-2]
-    if abs(((oldX-olderX)*framesSinceLastCircle+oldX)-x)<oldR:
+    if abs((((oldX-olderX)/previousFrameDistance)*framesSinceLastCircle+oldX)-x)<oldR:
         return True
     return False
 
@@ -197,7 +199,10 @@ cv2.namedWindow('frame')
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
 circleCoords = []
+#used for predicting location of next circle if one is not found for a while based on previous activity
 framesSinceLastCircle = 0
+previousFrameDistance = 0
+normalizedRadius = (0,0)
 
 while(cap.isOpened()):
     
@@ -246,6 +251,7 @@ while(cap.isOpened()):
                     cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                     cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             drawn = True
+        previousFrameDistance = framesSinceLastCircle
         framesSinceLastCircle = 0
     else:
         framesSinceLastCircle += 1
