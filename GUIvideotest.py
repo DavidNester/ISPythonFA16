@@ -261,6 +261,10 @@ while(cap.isOpened()):
         framesSinceLastCircle = 1
     else:
         framesSinceLastCircle += 1
+
+
+    edge = cv2.Canny(frame, 100, 200)
+    cv2.imshow('Edge', frame)
     
     """Code for drawing on video"""
     #drawing line
