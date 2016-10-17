@@ -177,20 +177,20 @@ def advance():
             else:
                 drawn = True
 
-"""checks to see if a circle is in a reasonable place based on the previous circle"""
+"""checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
     #TODO: consider situation that first circle is bad
-    global circleCoords,framesSinceLastCircle,normalizedRadius
+    global circleCoords,lastFrameWithCircle,secondLastFrameWithCircle,normalizedRadius,currentFrame
     normalizedRadius = ((normalizedRadius[0]*normalizedRadius[1]+r)/(normalizedRadius[1]+1),normalizedRadius[1]+1)
-    if len(circleCoords) == 0:
+    if lastFrameWithCircle == 0:
         return True
-    oldX,oldY,oldR = circleCoords[-1]
-    if abs(oldX-x) < oldR and abs(oldY-y) < oldR:
+    oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
+    if abs(oldX-x) < oldR and abs(oldY-y) < oldR and abs(r-normalizedRadius[0]) < 30:
         return True
-    if abs(normalizedRadius[0]-r) < 20:
+    if secondLastFrameWithCircle == 0:
         return True
-    olderX,olderY,olderR = circleCoords[-2]
-    if abs((((oldX-olderX)/previousFrameDistance)*framesSinceLastCircle+oldX)-x)<oldR:
+    olderX,olderY,olderR = circleCoords[secondLastFrameWithCircle]
+    if abs((((oldX-olderX)/(lastFrameWithCircle-secondLastFrameWithCircle))*(currentFrame-lastFrameWithCircle)+oldX)-x)<oldR:
         return True
     return False
 
@@ -204,11 +204,11 @@ cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
-circleCoords = []
+circleCoords = {} #all the (x,y,r) data for all of the circles
 #used for predicting location of next circle if one is not found for a while based on previous activity
-framesSinceLastCircle = 1
-previousFrameDistance = 1
-normalizedRadius = (0,0)
+lastFrameWithCircle = 0
+secondLastFrameWithCircle = 0
+normalizedRadius = (0,0) #(radius,number of data points)
 
 while(cap.isOpened()):
     
@@ -242,29 +242,40 @@ while(cap.isOpened()):
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
     """registers circles and draws them"""
-    circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
-    if circles is not None:
-        # convert the (x, y) coordinates and radius of the circles to integers
-        circles = np.round(circles[0, :]).astype("int")
- 
-        # loop over the (x, y) coordinates and radius of the circles
-        if not drawn:
-            for (x, y, r) in circles:
-                if normal(x,y,r):
-                    circleCoords += [(x,y,r)]
-                    # draw the circle in the output image, then draw a rectangle
-                    # corresponding to the center of the circle
-                    cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
-                    cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            drawn = True
-        previousFrameDistance = framesSinceLastCircle
-        framesSinceLastCircle = 1
+    if currentFrame in circleCoords:
+        circle = circleCoords[currentFrame]
+        for (x, y, r) in circles:
+            circleCoords[currentFrame] = (x,y,r)
+            # draw the circle in the output image, then draw a rectangle
+            # corresponding to the center of the circle
+            cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+            cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+        drawn = True
     else:
-        framesSinceLastCircle += 1
+        circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
+        if circles is not None:
+            # convert the (x, y) coordinates and radius of the circles to integers
+            circles = np.round(circles[0, :]).astype("int")
+ 
+            # loop over the (x, y) coordinates and radius of the circles
+            if not drawn:
+                for (x, y, r) in circles:
+                    if normal(x,y,r):
+                        circleCoords[currentFrame] = (x,y,r)
+                        #maxFrame = max(currentFrame,maxFrame)
+                        # draw the circle in the output image, then draw a rectangle
+                        # corresponding to the center of the circle
+                        cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+                        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                drawn = True
+            secondLastFrameWithCircle = lastFrameWithCircle
+            lastFrameWithCircle = currentFrame
+        else:
+            lastFrameWithCircle = currentFrame
 
 
     edge = cv2.Canny(frame, 100, 200)
-    cv2.imshow('Edge', frame)
+    cv2.imshow('Edge', edge)
     
     """Code for drawing on video"""
     #drawing line
