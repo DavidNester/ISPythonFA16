@@ -109,9 +109,14 @@ Function called when track bar is moved
 Changes video frame along with movement
 """
 def onChanged(x):
-    global currentFrame,finalFrame
+    global currentFrame,finalFrame,lastFrameWithCircle,secondLastFrameWithCircle, circleCoords
     finalFrame = False
     currentFrame = x
+    frames = circleCoords.keys()
+    previous = [i for i in frames if i <= currentFrame]
+    lastFrameWithCircle = max([i for i in frames if i <= currentFrame])
+    secondLastFrameWithCircle = max([i for i in frames if i < lastFrameWithCircle])
+    #deal with lastFrameWIthCircle and secondLastFrameWithCircle
 
 """returns the (minimum,maximum) x values of the centers of the circles"""
 def extremesX():
@@ -155,7 +160,7 @@ for j in range(length):
   
 """advances current frame and considers pause and speed"""  
 def advance():
-    global finalFrame,currentFrame,pause,drawn,framesSinceLastCircle
+    global finalFrame,currentFrame,pause,drawn
     if not pause and not finalFrame:
         drawn = False
         if speed == 0:
@@ -166,7 +171,6 @@ def advance():
         elif speed > 0:
             if currentFrame + speed**2 < length:
                 currentFrame += speed**2
-                framesSinceLastCircle += speed**2-1
             else:
                 drawn = True
         elif speed < 0:
@@ -239,6 +243,9 @@ while(cap.isOpened()):
 
     frame = memory[currentFrame]
     
+    edge = cv2.Canny(frame, 100, 200)
+    cv2.imshow('Edge', edge)
+    
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
     """registers circles and draws them"""
@@ -250,6 +257,8 @@ while(cap.isOpened()):
             # corresponding to the center of the circle
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+            secondLastFrameWithCircle = lastFrameWithCircle
+            lastFrameWithCircle = currentFrame
         drawn = True
     else:
         circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
@@ -267,15 +276,11 @@ while(cap.isOpened()):
                         # corresponding to the center of the circle
                         cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                        secondLastFrameWithCircle = lastFrameWithCircle
+                        lastFrameWithCircle = currentFrame
                 drawn = True
-            secondLastFrameWithCircle = lastFrameWithCircle
-            lastFrameWithCircle = currentFrame
-        else:
-            lastFrameWithCircle = currentFrame
+            
 
-
-    edge = cv2.Canny(frame, 100, 200)
-    cv2.imshow('Edge', edge)
     
     """Code for drawing on video"""
     #drawing line
