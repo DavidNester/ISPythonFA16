@@ -6,6 +6,7 @@ from PyQt4 import QtGui
 import Tkinter
 import tkFileDialog
 import os
+import matplotlib.pyplot as plt
 
 
 """Code for retrieving file name"""
@@ -291,12 +292,27 @@ while(cap.isOpened()):
             cv2.circle(frame, (rect[0], rect[1]), 50, color, -1)
 
     cv2.imshow('frame', frame)
-
     
     
     
-
-
 
 cap.release()
 cv2.destroyAllWindows()
+
+xCoords = []
+yCoords = []
+rCoords = []
+tCoords = [] 
+
+for frame in circleCoords.keys():
+    x,y,r = circleCoords[frame]
+    xCoords += [x]
+    yCoords += [y]
+    rCoords += [r]
+    tCoords += [frame]
+plt.figure(1)
+plt.subplot(211)
+plt.plot(tCoords,xCoords,'ro')
+plt.subplot(212)
+plt.plot(tCoords,yCoords,'ro')
+plt.show()
