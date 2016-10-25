@@ -7,9 +7,10 @@ import Tkinter
 import tkFileDialog
 import os
 import matplotlib.pyplot as plt
+import extra
 
 
-"""Code for retrieving file name"""
+"""INPUT FILE"""
 
 root = Tkinter.Tk()
 root.withdraw() #use to hide tkinter window
@@ -20,6 +21,12 @@ tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("All files", "*.*"))) #requests file name and type of files
 root.destroy()
 
+#Code for creating windows
+# QApplication created only here.
+app = QtGui.QApplication([])
+window = extra.MyWindow()
+
+"""variables for drawing"""
 rect = (0,0,0,0)
 startPoint = False
 endPoint = False
@@ -42,69 +49,6 @@ def on_mouse(event,x,y,flags,params):
             rect = (rect[0], rect[1], x, y)
             endPoint = True
 
-def circleChoice():
-    global option
-    option = 1
-
-def lineChoice():
-    global option
-    option = 2
-
-def blackColor():
-    global color
-    color = (0,0,0)
-
-def whiteColor():
-    global color
-    color = (255, 255, 255)
-    
-"""Function to create the window"""
-class MyWindow(QtGui.QDialog):    # any super class is okay
-    def __init__(self, parent=None):
-        super(MyWindow, self).__init__(parent)
-        layout = QtGui.QGridLayout()
-        circleButton = QtGui.QPushButton('Circle')
-        lineButton = QtGui.QPushButton('Line')
-        blackButton = QtGui.QPushButton('Black')
-        whiteButton = QtGui.QPushButton('White')
-        label1 = QtGui.QLabel("Shape")
-        label2 = QtGui.QLabel("Color")
-        layout.addWidget(label1,0,0)
-        layout.addWidget(circleButton ,1,0)
-        layout.addWidget(lineButton ,1,1)
-        layout.addWidget(label2, 2, 0)
-        layout.addWidget(blackButton,3,0)
-        layout.addWidget(whiteButton,3,1)
-        circleButton.clicked.connect(circleChoice)
-        lineButton.clicked.connect(lineChoice)
-        blackButton.clicked.connect(blackColor)
-        whiteButton.clicked.connect(whiteColor)
-        self.setLayout(layout)
-        self.setWindowTitle("Toolbar");
-    def create_child(self):
-        # here put the code that creates the new window and shows it.
-        child = MyWindow(self)
-        child.show()
-while True:
-    try:
-        fps = int(raw_input("How many frames per second does the video have? "))
-        break
-    except:
-        print "Please enter an Integer value"
-
-font = cv2.FONT_HERSHEY_SIMPLEX
-cap = cv2.VideoCapture(tempdir)
-height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-
-
-#Code for creating windows
-# QApplication created only here.
-app = QtGui.QApplication([])
-window = MyWindow()
-"""End"""
-length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
 """
 Function called when track bar is moved
 Changes video frame along with movement
@@ -117,48 +61,30 @@ def onChanged(x):
     previous = [i for i in frames if i <= currentFrame]
     lastFrameWithCircle = max([i for i in frames if i <= currentFrame])
     secondLastFrameWithCircle = max([i for i in frames if i < lastFrameWithCircle])
-    #deal with lastFrameWIthCircle and secondLastFrameWithCircle
 
-"""returns the (minimum,maximum) x values of the centers of the circles"""
-def extremesX():
-    global circleCoords
-    minimum = float("inf")
-    maximum = float("-inf")
-    
-    for (x,y,r) in circleCoords:
-        minimum = min(minimum,x)
-        maximum = max(maximum,x)
-    return (minimum,maximum)
+"""BEGINNING OF THE CODE"""
 
-"""returns the (minimum,maximum) y values of the centers of the circles"""
-def extremesY():
-    global circleCoords
-    minimum = float("inf")
-    maximum = float("-inf")
-    
-    for (x,y,r) in circleCoords:
-        minimum = min(minimum,y)
-        maximum = max(maximum,y)
-    return (minimum,maximum)
 
-"""stores all the frames in an array and puts some information on them"""
-memory = [-1]
+
+"""GET FRAMES PER SECOND OF VIDEO"""
+while True:
+    try:
+        fps = int(raw_input("How many frames per second does the video have? "))
+        break
+    except:
+        print "Please enter an Integer value"
+
+cap = cv2.VideoCapture(tempdir)
+font = cv2.FONT_HERSHEY_SIMPLEX
+height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+"""STORE VIDEO IN ARRAY"""
 print "Processing video...May take a few seconds"
-for j in range(length):
-    ret,frame = cap.read()
-    
-    #add frame number to video
-    cv2.putText(frame,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), font, 2,(255,255,255))
-    #add seconds to video
-    cv2.putText(frame,str("{0:.2f}".format(float(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)/float(fps))))+'s',(0,height-50), font, 1,(255,255,255))
-    for i in range(1+(height/100)):
-        cv2.line(frame,(0,i*100),(width,i*100),(0,0,0),1)
-    for i in range(1+(width/100)):
-        cv2.line(frame,(i*100,0),(i*100,height),(0,0,0),1)
-    frame = cv2.resize(frame,(0,0),fx=2,fy=2)
-    memory += [frame]
+memory = extra.process(length,height,width,fps,cap)
 
-  
+
 """advances current frame and considers pause and speed"""  
 def advance():
     global finalFrame,currentFrame,pause,drawn
@@ -185,8 +111,7 @@ def advance():
 """checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
     #TODO: consider situation that first circle is bad
-    global circleCoords,lastFrameWithCircle,secondLastFrameWithCircle,normalizedRadius,currentFrame
-    normalizedRadius = ((normalizedRadius[0]*normalizedRadius[1]+r)/(normalizedRadius[1]+1),normalizedRadius[1]+1)
+    global circleCoords,lastFrameWithCircle,secondLastFrameWithCircle,currentFrame
     if lastFrameWithCircle == 0:
         return True
     oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
@@ -199,7 +124,7 @@ def normal(x,y,r):
         return True
     return False
 
-    
+"""VIDEO CONTROL VARIABLES AND DATA VARIABLES"""
 currentFrame = 1
 speed = 0
 finalFrame = False
@@ -215,7 +140,9 @@ lastFrameWithCircle = 0
 secondLastFrameWithCircle = 0
 normalizedRadius = (0,0) #(radius,number of data points)
 
-while(cap.isOpened()):
+
+"""LOOP FOR DISPLAYING VIDEO"""
+while(True):
     
     advance()
     
@@ -250,16 +177,15 @@ while(cap.isOpened()):
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
     """registers circles and draws them"""
-    if currentFrame in circleCoords:
-        circle = circleCoords[currentFrame]
-        for (x, y, r) in circles:
-            circleCoords[currentFrame] = (x,y,r)
-            # draw the circle in the output image, then draw a rectangle
-            # corresponding to the center of the circle
-            cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
-            cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            secondLastFrameWithCircle = lastFrameWithCircle
-            lastFrameWithCircle = currentFrame
+    if currentFrame in circleCoords.keys():
+        x,y,r = circleCoords[currentFrame]
+        
+        # draw the circle in the output image, then draw a rectangle
+        # corresponding to the center of the circle
+        cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+        secondLastFrameWithCircle = lastFrameWithCircle
+        lastFrameWithCircle = currentFrame
         drawn = True
     else:
         circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
@@ -271,12 +197,13 @@ while(cap.isOpened()):
             if not drawn:
                 for (x, y, r) in circles:
                     if normal(x,y,r):
+                        normalizedRadius = ((normalizedRadius[0]*normalizedRadius[1]+r)/(normalizedRadius[1]+1),normalizedRadius[1]+1)
                         circleCoords[currentFrame] = (x,y,r)
-                        #maxFrame = max(currentFrame,maxFrame)
                         # draw the circle in the output image, then draw a rectangle
                         # corresponding to the center of the circle
                         cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                        
                         secondLastFrameWithCircle = lastFrameWithCircle
                         lastFrameWithCircle = currentFrame
                 drawn = True
@@ -299,6 +226,8 @@ while(cap.isOpened()):
 cap.release()
 cv2.destroyAllWindows()
 
+
+"""Plots motion in matplotlib"""
 xCoords = []
 yCoords = []
 rCoords = []
