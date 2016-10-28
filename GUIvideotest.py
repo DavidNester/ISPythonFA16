@@ -65,7 +65,6 @@ def onChanged(x):
 """BEGINNING OF THE CODE"""
 
 
-
 """GET FRAMES PER SECOND OF VIDEO"""
 while True:
     try:
@@ -115,7 +114,7 @@ def normal(x,y,r):
     if lastFrameWithCircle == 0:
         return True
     oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
-    if abs(oldX-x) < oldR and abs(oldY-y) < oldR and abs(r-normalizedRadius[0]) < 30:
+    if abs(oldX-x) < oldR and abs(oldY-y) < oldR and abs(r-oldR) < 20:
         return True
     if secondLastFrameWithCircle == 0:
         return True
@@ -138,7 +137,7 @@ circleCoords = {} #all the (x,y,r) data for all of the circles
 #used for predicting location of next circle if one is not found for a while based on previous activity
 lastFrameWithCircle = 0
 secondLastFrameWithCircle = 0
-normalizedRadius = (0,0) #(radius,number of data points)
+
 
 
 """LOOP FOR DISPLAYING VIDEO"""
@@ -188,26 +187,33 @@ while(True):
         lastFrameWithCircle = currentFrame
         drawn = True
     else:
-        circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
-        if circles is not None:
-            # convert the (x, y) coordinates and radius of the circles to integers
-            circles = np.round(circles[0, :]).astype("int")
- 
-            # loop over the (x, y) coordinates and radius of the circles
-            if not drawn:
-                for (x, y, r) in circles:
-                    if normal(x,y,r):
-                        normalizedRadius = ((normalizedRadius[0]*normalizedRadius[1]+r)/(normalizedRadius[1]+1),normalizedRadius[1]+1)
-                        circleCoords[currentFrame] = (x,y,r)
-                        # draw the circle in the output image, then draw a rectangle
-                        # corresponding to the center of the circle
-                        cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
-                        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+        found = False
+        alpha = 90
+        while not found:
+            circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha)  
+            if circles is not None:
+                found = True
+                # convert the (x, y) coordinates and radius of the circles to integers
+                circles = np.round(circles[0, :]).astype("int")
+    
+                # loop over the (x, y) coordinates and radius of the circles
+                if not drawn:
+                    for (x, y, r) in circles:
+                        if normal(x,y,r):
+                            found = True
+                            circleCoords[currentFrame] = (x,y,r)
+                            # draw the circle in the output image, then draw a rectangle
+                                # corresponding to the center of the circle
+                            cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+                            cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                         
-                        secondLastFrameWithCircle = lastFrameWithCircle
-                        lastFrameWithCircle = currentFrame
+                            secondLastFrameWithCircle = lastFrameWithCircle
+                            lastFrameWithCircle = currentFrame
+                else:
+                    found = True
                 drawn = True
-            
+            else:
+                alpha -= 5
 
     
     """Code for drawing on video"""
