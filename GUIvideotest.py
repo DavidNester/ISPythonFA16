@@ -38,7 +38,7 @@ outside = None
 """Function called when the image is clicked on"""
 def on_mouse(event,x,y,flags,params):
     #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,secondLastFrameWithCircle,lastFrameWithCircle,pause,length,width
+    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,width
     # get mouse click
     if event == cv2.EVENT_LBUTTONDOWN:
         if x<0 or x>width or y<0 or y>height:
@@ -53,7 +53,6 @@ def on_mouse(event,x,y,flags,params):
                 cv2.setTrackbarPos('Frames','frame',currentFrame)
                 cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                 cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                secondLastFrameWithCircle = 0
                 lastFrameWithCircle = currentFrame
                 
                 cv2.imshow('frame', frame)
@@ -85,13 +84,12 @@ Function called when track bar is moved
 Changes video frame along with movement
 """
 def onChanged(x):
-    global currentFrame,finalFrame,lastFrameWithCircle,secondLastFrameWithCircle, circleCoords
+    global currentFrame,finalFrame,lastFrameWithCircle, circleCoords
     finalFrame = False
     currentFrame = x
     frames = circleCoords.keys()
     previous = [i for i in frames if i <= currentFrame]
     lastFrameWithCircle = max([i for i in frames if i <= currentFrame])
-    secondLastFrameWithCircle = max([i for i in frames if i < lastFrameWithCircle])
 
 
 """advances current frame and considers pause and speed"""  
@@ -113,20 +111,16 @@ def advance():
 
 """checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
-    global circleCoords,lastFrameWithCircle,secondLastFrameWithCircle,currentFrame
+    global circleCoords,lastFrameWithCircle,currentFrame
     if lastFrameWithCircle == 0:
         return True
     oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
     if abs(oldX-x) < oldR/3 and abs(oldY-y) < oldR/3 and abs(r-oldR) < 20:
         return True
-    if secondLastFrameWithCircle != 0:
-        olderX,olderY,olderR = circleCoords[secondLastFrameWithCircle]
-        if abs((((oldX-olderX)/(lastFrameWithCircle-secondLastFrameWithCircle))*(currentFrame-lastFrameWithCircle)+oldX)-x)<oldR/3:
-            return True    
     return False
 
 def findCircles(frame):
-    global lastFrameWithCircle,secondLastFrameWithCircle,pause
+    global lastFrameWithCircle,pause
     found = False
     alpha = 90
     while not found:
@@ -136,7 +130,7 @@ def findCircles(frame):
             circles = np.round(circles[0, :]).astype("int")
             
             if len(circles) >= 2:
-                if currentFrame-lastFrameWithCircle > 15:
+                if currentFrame-lastFrameWithCircle > 10:
                     pause = True
                     print "Please click the center of the circle"
                     break
@@ -150,7 +144,6 @@ def findCircles(frame):
                 cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                 cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 
-                secondLastFrameWithCircle = lastFrameWithCircle
                 lastFrameWithCircle = currentFrame
             else:
                 found = True
@@ -205,7 +198,6 @@ cv2.setMouseCallback('frame', on_mouse)
 circleCoords = {} #all the (x,y,r) data for all of the circles
 #used for predicting location of next circle if one is not found for a while based on previous activity
 lastFrameWithCircle = 0
-secondLastFrameWithCircle = 0
 
 
 
