@@ -8,9 +8,14 @@ import tkFileDialog
 import os
 import matplotlib.pyplot as plt
 import extra
+#object tracking
+from collections import deque
+import argparse
+import imutils
+
 
 """INPUT FILE"""
-
+"""
 root = Tkinter.Tk()
 root.withdraw() #use to hide tkinter window
 
@@ -19,7 +24,7 @@ tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
                                                          ,("All files", "*.*"))) #requests file name and type of files
 root.destroy()
-    
+    """
 #Code for creating windows
 # QApplication created only here.
 app = QtGui.QApplication([])
@@ -41,6 +46,7 @@ def on_mouse(event,x,y,flags,params):
     global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,width
     # get mouse click
     if event == cv2.EVENT_LBUTTONDOWN:
+        print x,y
         if x<0 or x>width or y<0 or y>height:
             pass
         elif pause:
@@ -62,22 +68,16 @@ def on_mouse(event,x,y,flags,params):
             else:
                 center = (x,y)
                 print "Please click on the edge of the circle"
-        """if startPoint == True and endPoint == True:
-            startPoint = False
-            endPoint = False
-            rect = (0, 0, 0, 0)
-        if startPoint == False:
-            rect = (x, y, 0, 0)
-            startPoint = True
-        elif endPoint == False:
-            rect = (rect[0], rect[1], x, y)
-            endPoint = True
-            """
 
 def distance(p1,p2):
     dx = (p1[0]-p2[0])*1.0
     dy = (p1[1]-p2[1])*1.0
     return int((dx**2 + dy**2)**.5)
+
+def gamma_correction(img, correction):
+    img = img/255.0
+    img = cv2.pow(img, correction)
+    return np.uint8(img*255)
 
 """
 Function called when track bar is moved
@@ -124,7 +124,7 @@ def findCircles(frame):
     found = False
     alpha = 90
     while not found:
-        circles = cv2.HoughCircles(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha)  
+        circles = cv2.HoughCircles(frame, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha)  
         if circles is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
             circles = np.round(circles[0, :]).astype("int")
@@ -141,7 +141,7 @@ def findCircles(frame):
                 circleCoords[currentFrame] = (x,y,r)
                 # draw the circle in the output image, then draw a rectangle
                 # corresponding to the center of the circle
-                cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+                cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
                 cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 
                 lastFrameWithCircle = currentFrame
@@ -150,7 +150,7 @@ def findCircles(frame):
         else:
             alpha -= 5
             if alpha <= 30:
-                if currentFrame-lastFrameWithCircle > 15:
+                if currentFrame-lastFrameWithCircle > 10:
                     pause = True
                     print "Please click the center of the circle"
                     break
@@ -169,10 +169,10 @@ def findCircles(frame):
     except:
         print "Please enter an Integer value"
 """        
-#video = 'DSC_0033.MOV'
+video = 'Rachel_and_Camille.MOV'
 fps = 123
 
-cap = cv2.VideoCapture(tempdir)
+cap = cv2.VideoCapture(video)
 font = cv2.FONT_HERSHEY_SIMPLEX
 height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))*2
 width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))*2
@@ -231,9 +231,6 @@ while(True):
 
     frame = memory[currentFrame]
     
-    edge = cv2.Canny(frame, 100, 200)
-    #cv2.imshow('Edge', edge)
-    
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
     
@@ -248,19 +245,76 @@ while(True):
     
     else:
         if not pause:
-            frame = findCircles(frame)
+            original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)   
+            retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
     
-
+            el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+            image = cv2.dilate(image, el, iterations=4)
     
-    """Code for drawing on video"""
-    #drawing line
-    if startPoint == True and endPoint == True:
-        if option == 2:
-            cv2.line(frame, (rect[0], rect[1]), (rect[2], rect[3]), color, 2)
-        elif option == 1:
-            cv2.circle(frame, (rect[0], rect[1]), 50, color, -1)
+            image = cv2.GaussianBlur(image, (13, 13), 0)
 
+            frame = findCircles(image)
+    
     cv2.imshow('frame', frame)
+    
+
+    
+
+
+"""
+    #COLOR DETECTION
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-v", "--video",
+	help="path to the (optional) video file")
+    ap.add_argument("-b", "--buffer", type=int, default=64,
+	help="max buffer size")
+    args = vars(ap.parse_args())
+    pts = deque(maxlen=args["buffer"])
+    dst = gamma_correction(frame, 0.40)
+
+    
+    # define range of red color in HSV
+    lower_red = np.array([40, 90, 120])
+    upper_red = np.array([90, 255, 255])
+
+    # Threshold the HSV image to get only red colors
+    mask = cv2.inRange(dst, lower_red, upper_red)
+    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.dilate(mask, None, iterations=2)
+
+    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+		cv2.CHAIN_APPROX_SIMPLE)[-2]
+    center = None
+    # only proceed if at least one contour was found
+    if len(cnts) > 0:
+        # find the largest contour in the mask, then use
+        # it to compute the minimum enclosing circle and
+        # centroid
+        c = max(cnts, key=cv2.contourArea)
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
+        M = cv2.moments(c)
+        center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+           
+        # only proceed if the radius meets a minimum size
+        if int(x)<544 and int(x)>45:
+            count+=1
+            # draw the circle and centroid on the frame,
+            # then update the list of tracked points
+            cv2.circle(frame, (int(x), int(y)), int(radius),
+                       (0, 255, 255), 2)
+            cv2.circle(frame, center, 5, (0, 0, 255), -1)
+            print count, "-", int(x) , int(y)
+             
+    # update the points queue
+    pts.appendleft(center)
+                
+    # Bitwise-AND mask and original image
+    res = cv2.bitwise_and(frame,frame, mask= mask)
+    cv2.imshow('hsv', dst)
+    cv2.imshow('mask',mask)
+
+"""
+    
     
     
     
