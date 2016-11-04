@@ -121,41 +121,41 @@ def normal(x,y,r):
 
 def findCircles(frame):
     global lastFrameWithCircle,pause
+    original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)   
+    retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
+    
+    el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    image = cv2.dilate(image, el, iterations=4)
+    
+    image = cv2.GaussianBlur(image, (13, 13), 0)
+
     found = False
     alpha = 90
     while not found:
-        circles = cv2.HoughCircles(frame, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha)  
+        circles = cv2.HoughCircles(image, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha)  
         if circles is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
             circles = np.round(circles[0, :]).astype("int")
-            
-            if len(circles) >= 2:
-                if currentFrame-lastFrameWithCircle > 10:
-                    pause = True
-                    print "Please click the center of the circle"
-                    break
-            x,y,r = circles[0]
+            #x,y,r = circles[0]
+            for x,y,r in circles:
             # loop over the (x, y) coordinates and radius of the circles
-            if normal(x,y,r):
-                found = True
-                circleCoords[currentFrame] = (x,y,r)
-                # draw the circle in the output image, then draw a rectangle
-                # corresponding to the center of the circle
-                cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-                cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                
-                lastFrameWithCircle = currentFrame
-            else:
-                found = True
+                if normal(x,y,r):
+                    found = True
+                    circleCoords[currentFrame] = (x,y,r)
+                    # draw the circle in the output image, then draw a rectangle
+                    # corresponding to the center of the circle
+                    cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
+                    cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                    
+                    lastFrameWithCircle = currentFrame
+            found = True
         else:
             alpha -= 5
             if alpha <= 30:
-                if currentFrame-lastFrameWithCircle > 10:
-                    pause = True
-                    print "Please click the center of the circle"
-                    break
-                else:
-                    found = True
+                found = True
+    if currentFrame-lastFrameWithCircle > 10:
+        pause = True
+        print "Please click on center of circle"
     return frame
 
 """BEGINNING OF THE CODE"""
@@ -245,15 +245,7 @@ while(True):
     
     else:
         if not pause:
-            original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)   
-            retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
-    
-            el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-            image = cv2.dilate(image, el, iterations=4)
-    
-            image = cv2.GaussianBlur(image, (13, 13), 0)
-
-            frame = findCircles(image)
+            frame = findCircles(frame)
     
     cv2.imshow('frame', frame)
     
