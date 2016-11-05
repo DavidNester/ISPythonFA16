@@ -88,8 +88,8 @@ def onChanged(x):
     finalFrame = False
     currentFrame = x
     frames = circleCoords.keys()
-    previous = [i for i in frames if i <= currentFrame]
-    lastFrameWithCircle = max([i for i in frames if i <= currentFrame])
+    previous = [i for i in frames if i < currentFrame]
+    lastFrameWithCircle = max(previous)
 
 
 """advances current frame and considers pause and speed"""  
@@ -115,7 +115,7 @@ def normal(x,y,r):
     if lastFrameWithCircle == 0:
         return True
     oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
-    if abs(oldX-x) < oldR/3 and abs(oldY-y) < oldR/3 and abs(r-oldR) < 20:
+    if abs(oldX-x) < oldR/2 and abs(oldY-y) < oldR/2 and abs(r-oldR) < oldR/2:
         return True
     return False
 
@@ -148,7 +148,10 @@ def findCircles(frame):
                     cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                     
                     lastFrameWithCircle = currentFrame
-            found = True
+            if not found:
+                alpha -= 5
+                if alpha <= 30:
+                    found = True
         else:
             alpha -= 5
             if alpha <= 30:
@@ -169,7 +172,7 @@ def findCircles(frame):
     except:
         print "Please enter an Integer value"
 """        
-video = 'Rachel_and_Camille.MOV'
+video = 'pendulum.MOV'
 fps = 123
 
 cap = cv2.VideoCapture(video)
@@ -240,7 +243,7 @@ while(True):
         
         # draw the circle in the output image, then draw a rectangle
         # corresponding to the center of the circle
-        cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
+        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
     
     else:
