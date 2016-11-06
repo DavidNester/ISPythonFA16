@@ -37,21 +37,27 @@ endPoint = False
 option = 1
 color = (255, 0, 255)
 
+
+#used for mouse input from user
 center = None
 outside = None
 
 """Function called when the image is clicked on"""
+"""used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event,x,y,flags,params):
     #global rect,startPoint,endPoint
     global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,width
-    # get mouse click
+    #get only left mouse click
     if event == cv2.EVENT_LBUTTONDOWN:
-        print x,y
+        #make sure click was in window
         if x<0 or x>width or y<0 or y>height:
             pass
+        #only use if paused (paused when nothing is found)
         elif pause:
+            #if second click (outside)
             if center is not None:
                 outside = (x,y)
+                #draw inputted cricle on frame and then show it
                 frame = memory[currentFrame]
                 x,y = center
                 r = distance(center,outside)
@@ -60,15 +66,17 @@ def on_mouse(event,x,y,flags,params):
                 cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                 cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 lastFrameWithCircle = currentFrame
-                
                 cv2.imshow('frame', frame)
                 
+                #return to normal state
                 pause = False
                 center = outside = None
+            #if first click (center)
             else:
                 center = (x,y)
                 print "Please click on the edge of the circle"
 
+"""distance between two coordinates"""
 def distance(p1,p2):
     dx = (p1[0]-p2[0])*1.0
     dy = (p1[1]-p2[1])*1.0
@@ -81,28 +89,29 @@ def gamma_correction(img, correction):
 
 """
 Function called when track bar is moved
-Changes video frame along with movement
+updates currentFrame and lastFrameWithCircle
 """
 def onChanged(x):
     global currentFrame,finalFrame,lastFrameWithCircle, circleCoords
     finalFrame = False
     currentFrame = x
-    frames = circleCoords.keys()
-    previous = [i for i in frames if i < currentFrame]
-    lastFrameWithCircle = max(previous)
+    #lastFrameWith circle is highest frame in record that is less than the new currentFrame
+    lastFrameWithCircle = max([i for i in circleCoords.keys() if i < currentFrame])
 
 
 """advances current frame and considers pause and speed"""  
 def advance():
     global finalFrame,currentFrame,pause
+    #only advance if video is not paused or at the end
     if not pause and not finalFrame:
         if speed == 0:
             if currentFrame + 1 < length:
                 currentFrame += 1
+        #if sped up then skip frames
         elif speed > 0:
             if currentFrame + speed**2 < length:
                 currentFrame += speed**2
-
+        #if slowed down then pause before giving next frame
         elif speed < 0:
             for i in range(speed**2):
                 time.sleep(.1)
@@ -112,16 +121,19 @@ def advance():
 """checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
     global circleCoords,lastFrameWithCircle,currentFrame
+    #accept data if we hae no prior knowledge
     if lastFrameWithCircle == 0:
         return True
     oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
+    #make sure that the new circle agrees with the old circle
     if abs(oldX-x) < oldR/2 and abs(oldY-y) < oldR/2 and abs(r-oldR) < oldR/2:
         return True
     return False
 
+"""given a frame it finds the circle and returns the frame with the circle drawn on it"""
 def findCircles(frame):
     global lastFrameWithCircle,pause
-    original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)   
+    original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
     retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
     
     el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
@@ -132,13 +144,12 @@ def findCircles(frame):
     found = False
     alpha = 90
     while not found:
-        circles = cv2.HoughCircles(image, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha)  
+        circles = cv2.HoughCircles(image, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha) #find circles 
         if circles is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
             circles = np.round(circles[0, :]).astype("int")
-            #x,y,r = circles[0]
+            #check if the circles agree with previous data
             for x,y,r in circles:
-            # loop over the (x, y) coordinates and radius of the circles
                 if normal(x,y,r):
                     found = True
                     circleCoords[currentFrame] = (x,y,r)
@@ -153,9 +164,11 @@ def findCircles(frame):
                 if alpha <= 30:
                     found = True
         else:
+            #if no circles found then try again with new threshold (threshold stops at 30)
             alpha -= 5
             if alpha <= 30:
                 found = True
+    #if we havent found a circle in more than 10 frames then ask the user for help
     if currentFrame-lastFrameWithCircle > 10:
         pause = True
         print "Please click on center of circle"
@@ -175,6 +188,7 @@ def findCircles(frame):
 video = 'pendulum.MOV'
 fps = 123
 
+#video data
 cap = cv2.VideoCapture(video)
 font = cv2.FONT_HERSHEY_SIMPLEX
 height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))*2
@@ -206,9 +220,10 @@ lastFrameWithCircle = 0
 
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
-    
+    #advance frame
     advance()
     
+    """BUTTON COMMANDS"""
     #get button press
     key = cv2.waitKey(1) & 0xFF
     #pause
@@ -232,12 +247,13 @@ while(True):
     if key == ord('t'):
         window.show()
 
+    #get frame
     frame = memory[currentFrame]
     
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
     
-    """registers circles and draws them"""
+    #if we already have the frame in memory then use circles that were found
     if currentFrame in circleCoords.keys():
         x,y,r = circleCoords[currentFrame]
         
@@ -246,6 +262,7 @@ while(True):
         cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
     
+    #find new circles if new frame and not paused
     else:
         if not pause:
             frame = findCircles(frame)
@@ -313,7 +330,7 @@ while(True):
     
     
     
-
+#end video viewing
 cap.release()
 cv2.destroyAllWindows()
 
@@ -324,12 +341,14 @@ yCoords = []
 rCoords = []
 tCoords = [] 
 
+#get all frames,x,y,r and store each in their own array
 for frame in circleCoords.keys():
     x,y,r = circleCoords[frame]
     xCoords += [x]
     yCoords += [y]
     rCoords += [r]
     tCoords += [frame]
+#plot the data
 plt.figure(1)
 plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
