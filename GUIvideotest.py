@@ -140,7 +140,7 @@ def findCircles(frame):
     image = cv2.dilate(image, el, iterations=4)
     
     image = cv2.GaussianBlur(image, (13, 13), 0)
-
+    cv2.imshow('image',original)
     found = False
     alpha = 90
     while not found:
@@ -185,7 +185,7 @@ def findCircles(frame):
     except:
         print "Please enter an Integer value"
 """        
-video = 'pendulum.MOV'
+video = 'DSC_0245.MOV'
 fps = 123
 
 #video data
@@ -354,4 +354,8 @@ plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
 plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
+plt.figure(2)
+plt.subplot(211)
+plt.plot(tCoords,rCoords,'ro')
+
 plt.show()
