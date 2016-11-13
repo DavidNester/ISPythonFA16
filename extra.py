@@ -21,23 +21,19 @@ def extremesY(circleCoords):
         maximum = max(maximum,y)
     return (minimum,maximum)
 
-"""stores all the frames in an array and puts some information on them"""
-def process(length,height,width,fps,cap):
-    memory = [-1]
-    for j in range(length):
-        ret,frame = cap.read()
-    
-        #add frame number to video
-        cv2.putText(frame,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), cv2.FONT_HERSHEY_SIMPLEX, 2,(255,255,255))
-        #add seconds to video
-        cv2.putText(frame,str("{0:.2f}".format(float(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)/float(fps))))+'s',(0,height-50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
-        for i in range(1+(height/100)):
-            cv2.line(frame,(0,i*100),(width,i*100),(0,0,0),1)
-        for i in range(1+(width/100)):
-            cv2.line(frame,(i*100,0),(i*100,height),(0,0,0),1)
-        frame = cv2.resize(frame,(0,0),fx=2,fy=2)
-        memory += [frame]
-    return memory
+"""adds info and grid to video"""
+def process(frame,height,width,fps,cap):
+    #add frame number to video
+    cv2.putText(frame,str(int(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))),(0,height), cv2.FONT_HERSHEY_SIMPLEX, 2,(255,255,255))
+    #add seconds to video
+    cv2.putText(frame,str("{0:.2f}".format(float(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)/float(fps))))+'s',(0,height-50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
+    for i in range(1+(height/100)):
+        cv2.line(frame,(0,i*100),(width,i*100),(0,0,0),1)
+    for i in range(1+(width/100)):
+        cv2.line(frame,(i*100,0),(i*100,height),(0,0,0),1)
+    frame = cv2.resize(frame,(0,0),fx=2,fy=2)
+    return frame
+
 
 def circleChoice():
     global option
