@@ -366,4 +366,8 @@ plt.figure(2)
 plt.subplot(211)
 plt.plot(tCoords,rCoords,'ro')
 
+<<<<<<< HEAD
 plt.show()
+=======
+plt.show()
+>>>>>>> origin/master
