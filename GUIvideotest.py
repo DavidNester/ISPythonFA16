@@ -8,6 +8,7 @@ import tkFileDialog
 import os
 import matplotlib.pyplot as plt
 import extra
+from scipy.interpolate import interp1d
 #object tracking
 from collections import deque
 import argparse
@@ -46,7 +47,7 @@ outside = None
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event,x,y,flags,params):
     #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap
+    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,img
     #get only left mouse click
     if event == cv2.EVENT_LBUTTONDOWN:
         #make sure click was in window
@@ -75,10 +76,11 @@ def on_mouse(event,x,y,flags,params):
                 #return to normal state
                 pause = False
                 center = outside = None
+                img = extra.clear()
             #if first click (center)
             else:
                 center = (x,y)
-                print "Please click on the edge of the circle"
+                img = extra.feedback("Please click on the edge of the circle")
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -137,7 +139,7 @@ def normal(x,y,r):
 
 """given a frame it finds the circle and returns the frame with the circle drawn on it"""
 def findCircles(frame):
-    global lastFrameWithCircle,pause
+    global lastFrameWithCircle,pause,img
     original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
     retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
     
@@ -176,7 +178,7 @@ def findCircles(frame):
     #if we havent found a circle in more than 10 frames then ask the user for help
     if currentFrame-lastFrameWithCircle > 10:
         pause = True
-        print "Please click on center of circle"
+        img = extra.feedback("Please click on the center of the circle")
     return frame
 
 """BEGINNING OF THE CODE"""
@@ -200,9 +202,6 @@ height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))*2
 width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))*2
 length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-"""STORE VIDEO IN ARRAY"""
-print "Please click on the center of the circle"
-
 
 """VIDEO CONTROL VARIABLES AND DATA VARIABLES"""
 currentFrame = 1
@@ -218,8 +217,12 @@ circleCoords = {} #all the (x,y,r) data for all of the circles
 #used for predicting location of next circle if one is not found for a while based on previous activity
 lastFrameWithCircle = 0
 
-
-
+img = cv2.imread('white.png')
+cv2.moveWindow('frame',0,0)
+cv2.namedWindow('Instructions')
+cv2.moveWindow('Instructions',0,height+75)
+img = extra.feedback("Please click on the center of the circle")
+cv2.imshow('Instructions',img)
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
     #advance frame
@@ -243,20 +246,22 @@ while(True):
             speed -= 1
     #faster
     if key == ord('e'):
-        if speed < 4:
+        if speed < 3:
             speed += 1
     #drawing options
     if key == ord('t'):
         window.show()
     #left key -> advance frame    
-    if key == 2424832:
+    if key == 3:
         currentFrame += 1
-    if key == 2555904:
+    if key == 2:
         currentFrame -= 1
-    if key == 3014656:
-        center = None
-        outside = None
-        print "Please click on the center of the circle"
+    if key == 127:
+        if pause:
+            center = None
+            outside = None
+            img = extra.feedback("Please click on the center of the circle")
+        
 
     #get frame
     cap.set(1,currentFrame)
@@ -279,8 +284,12 @@ while(True):
     else:
         if not pause:
             frame = findCircles(frame)
-    
+            
+    if center and not outside:
+        cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
+    cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
+    
     
 
     
@@ -370,5 +379,10 @@ plt.plot(tCoords,yCoords,'ro')
 plt.figure(2)
 plt.subplot(211)
 plt.plot(tCoords,rCoords,'ro')
+"""f = interp1d(tCoords,xCoords, kind = 'cubic')
+plt.subplot(212)
+xnew = np.linspace(0,max(tCoords),num = 2*len(tCoords),endpoint = True)
+plt.plot(xnew,f(xCoords),'--')"""
+
 
 plt.show()
