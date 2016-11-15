@@ -19,7 +19,6 @@ import imutils
 """
 root = Tkinter.Tk()
 root.withdraw() #use to hide tkinter window
-
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
@@ -305,17 +304,14 @@ while(True):
     args = vars(ap.parse_args())
     pts = deque(maxlen=args["buffer"])
     dst = gamma_correction(frame, 0.40)
-
     
     # define range of red color in HSV
     lower_red = np.array([40, 90, 120])
     upper_red = np.array([90, 255, 255])
-
     # Threshold the HSV image to get only red colors
     mask = cv2.inRange(dst, lower_red, upper_red)
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
-
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)[-2]
     center = None
@@ -346,7 +342,6 @@ while(True):
     res = cv2.bitwise_and(frame,frame, mask= mask)
     cv2.imshow('hsv', dst)
     cv2.imshow('mask',mask)
-
 """
     
     

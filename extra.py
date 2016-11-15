@@ -78,7 +78,7 @@ class MyWindow(QtGui.QDialog):    # any super class is okay
         # here put the code that creates the new window and shows it.
         child = MyWindow(self)
         child.show()
-
+        
 def feedback(feedback):
     img=clear()
     cv2.putText(img,feedback,(0,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,255,0))
