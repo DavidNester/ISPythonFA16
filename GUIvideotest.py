@@ -18,7 +18,6 @@ import imutils
 """
 root = Tkinter.Tk()
 root.withdraw() #use to hide tkinter window
-
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
@@ -46,7 +45,7 @@ outside = None
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event,x,y,flags,params):
     #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,width
+    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap
     #get only left mouse click
     if event == cv2.EVENT_LBUTTONDOWN:
         #make sure click was in window
@@ -58,7 +57,11 @@ def on_mouse(event,x,y,flags,params):
             if center is not None:
                 outside = (x,y)
                 #draw inputted cricle on frame and then show it
-                frame = memory[currentFrame]
+                cap.set(1,currentFrame)
+                ret, frame = cap.read()
+                frame = cv2.resize(frame,(0,0),fx=2,fy=2)
+                frame = extra.process(frame,height,width,fps,cap)
+                #frame = memory[currentFrame]
                 x,y = center
                 r = distance(center,outside)
                 circleCoords[currentFrame] = (x,y,r)
@@ -95,8 +98,9 @@ def onChanged(x):
     global currentFrame,finalFrame,lastFrameWithCircle, circleCoords
     finalFrame = False
     currentFrame = x
-    #lastFrameWith circle is highest frame in record that is less than the new currentFrame
-    lastFrameWithCircle = max([i for i in circleCoords.keys() if i < currentFrame])
+    if lastFrameWithCircle != 0:
+        #lastFrameWith circle is highest frame in record that is less than the new currentFrame
+        lastFrameWithCircle = max([i for i in circleCoords.keys() if i < currentFrame])
 
 
 """advances current frame and considers pause and speed"""  
@@ -140,7 +144,7 @@ def findCircles(frame):
     image = cv2.dilate(image, el, iterations=4)
     
     image = cv2.GaussianBlur(image, (13, 13), 0)
-
+    
     found = False
     alpha = 90
     while not found:
@@ -196,9 +200,6 @@ width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))*2
 length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 """STORE VIDEO IN ARRAY"""
-print "Processing video...May take a few seconds"
-memory = extra.process(length,height,width,fps,cap)
-
 print "Please click on the center of the circle"
 
 
@@ -246,9 +247,20 @@ while(True):
     #drawing options
     if key == ord('t'):
         window.show()
+    #left key -> advance frame    
+    if key == 2424832:
+        currentFrame += 1
+    if key == 2555904:
+        currentFrame -= 1
+    if key == 3014656:
+        center = None
+        outside = None
+        print "Please click on the center of the circle"
 
     #get frame
-    frame = memory[currentFrame]
+    cap.set(1,currentFrame)
+    ret, frame = cap.read()
+    frame = extra.process(frame,height,width,fps,cap)
     
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
@@ -283,17 +295,14 @@ while(True):
     args = vars(ap.parse_args())
     pts = deque(maxlen=args["buffer"])
     dst = gamma_correction(frame, 0.40)
-
     
     # define range of red color in HSV
     lower_red = np.array([40, 90, 120])
     upper_red = np.array([90, 255, 255])
-
     # Threshold the HSV image to get only red colors
     mask = cv2.inRange(dst, lower_red, upper_red)
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
-
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)[-2]
     center = None
@@ -324,7 +333,6 @@ while(True):
     res = cv2.bitwise_and(frame,frame, mask= mask)
     cv2.imshow('hsv', dst)
     cv2.imshow('mask',mask)
-
 """
     
     
@@ -354,4 +362,8 @@ plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
 plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
+plt.figure(2)
+plt.subplot(211)
+plt.plot(tCoords,rCoords,'ro')
+
 plt.show()
