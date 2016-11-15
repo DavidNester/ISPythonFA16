@@ -1,1 +1,2 @@
 python guivideotest.py
+Exit
