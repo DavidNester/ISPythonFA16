@@ -107,9 +107,10 @@ def onChanged(x):
 
 """advances current frame and considers pause and speed"""  
 def advance():
-    global finalFrame,currentFrame,pause
+    global finalFrame,currentFrame,pause,plot
     #only advance if video is not paused or at the end
     if not pause and not finalFrame:
+        plot = True
         if speed == 0:
             if currentFrame + 1 < length:
                 currentFrame += 1
@@ -207,6 +208,8 @@ currentFrame = 1
 speed = 0
 finalFrame = False
 pause = True #video starts paused
+plot = False
+plt.ion()
 
 cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
@@ -218,6 +221,7 @@ lastFrameWithCircle = 0
 
 img = cv2.imread('white.png')
 cv2.moveWindow('frame',0,0)
+
 cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle")
@@ -288,6 +292,26 @@ while(True):
         cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
+    """Plots motion in matplotlib"""
+    if plot:
+        xCoords = []
+        yCoords = []
+        rCoords = []
+        tCoords = [] 
+        
+        #get all frames,x,y,r and store each in their own array
+        for i in circleCoords.keys():
+            x,y,r = circleCoords[i]
+            xCoords += [x]
+            yCoords += [y]
+            rCoords += [r]
+            tCoords += [i]
+        #plot the data
+        plt.figure(1)
+        plt.subplot(211)
+        plt.plot(tCoords,xCoords,'ro')
+        plt.show(0)
+        plot = False
     
     
 
@@ -371,9 +395,9 @@ plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
 plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
-plt.figure(2)
+"""plt.figure(2)
 plt.subplot(211)
-plt.plot(tCoords,rCoords,'ro')
+plt.plot(tCoords,rCoords,'r--')"""
 """f = interp1d(tCoords,xCoords, kind = 'cubic')
 plt.subplot(212)
 xnew = np.linspace(0,max(tCoords),num = 2*len(tCoords),endpoint = True)
