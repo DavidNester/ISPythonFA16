@@ -226,6 +226,12 @@ cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle")
 cv2.imshow('Instructions',img)
+
+xCoords = []
+yCoords = []
+rCoords = []
+tCoords = []
+        
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
     #advance frame
@@ -294,23 +300,14 @@ while(True):
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
     if plot:
-        xCoords = []
-        yCoords = []
-        rCoords = []
-        tCoords = [] 
         
-        #get all frames,x,y,r and store each in their own array
-        for i in circleCoords.keys():
-            x,y,r = circleCoords[i]
-            xCoords += [x]
-            yCoords += [y]
-            rCoords += [r]
-            tCoords += [i]
+        x,y,r = circleCoords[lastFrameWithCircle]
+        xCoords += [x]
+        yCoords += [y]
+        rCoords += [r]
+        tCoords += [lastFrameWithCircle]
         #plot the data
-        plt.figure(1)
-        plt.subplot(211)
         plt.plot(tCoords,xCoords,'ro')
-        plt.show(0)
         plot = False
     
     
