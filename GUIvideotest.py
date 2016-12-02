@@ -6,6 +6,8 @@ from PyQt4 import QtGui
 from Tkinter import *
 import tkFileDialog
 import os
+"""import matplotlib
+matplotlib.use('GTKAgg')"""
 import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
@@ -47,7 +49,7 @@ outside = None
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event,x,y,flags,params):
     #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,img
+    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,img,first,points,ax,plot
     #get only left mouse click
     if event == cv2.EVENT_LBUTTONDOWN:
         #make sure click was in window
@@ -58,10 +60,13 @@ def on_mouse(event,x,y,flags,params):
             #if second click (outside)
             if center is not None:
                 outside = (x,y)
+                if first is None:
+                    first = (center[0],center[1],distance(center,outside),currentFrame)
+                    #points = ax.plot(currentFrame,center[0],'ro')[0]
+                    plot = True
                 #draw inputted cricle on frame and then show it
                 cap.set(1,currentFrame)
                 ret, frame = cap.read()
-                frame = cv2.resize(frame,(0,0),fx=2,fy=2)
                 frame = extra.process(frame,height,width,fps,cap)
                 #frame = memory[currentFrame]
                 x,y = center
@@ -204,8 +209,8 @@ video = 'pendulum.MOV'
 #video data
 cap = cv2.VideoCapture(video)
 font = cv2.FONT_HERSHEY_SIMPLEX
-height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))*2
-width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))*2
+height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
 
@@ -215,6 +220,10 @@ speed = 0
 finalFrame = False
 pause = True #video starts paused
 plot = False
+<<<<<<< HEAD
+=======
+first = None
+>>>>>>> origin/master
 plt.ion()
 
 cv2.namedWindow('frame')
@@ -233,6 +242,7 @@ cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle")
 cv2.imshow('Instructions',img)
 
+<<<<<<< HEAD
 
 xCoords = []
 yCoords = []
@@ -247,6 +257,18 @@ xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
         
+=======
+xCoords = []
+tCoords = []
+
+fig, ax = plt.subplots(1, 1)
+ax.set_xlim(0, length)
+"""
+plt.show(False)
+plt.draw()
+background = fig.canvas.copy_from_bbox(ax.bbox)
+"""     
+>>>>>>> origin/master
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
     #advance frame
@@ -329,6 +351,7 @@ while(True):
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
+<<<<<<< HEAD
     if plot:
         
         x,y,r = circleCoords[lastFrameWithCircle]
@@ -344,6 +367,33 @@ while(True):
         
         ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
         ydistance_in = ydistance_cm/ 2.54
+=======
+    if plot and first is not None:
+        
+        x,y,r = circleCoords[lastFrameWithCircle]
+        """
+        points.set_data(lastFrameWithCircle,x)
+        # restore background
+        fig.canvas.restore_region(background)
+
+        # redraw just the points
+        ax.draw_artist(points)
+
+        # fill in the axes rectangle
+        fig.canvas.blit(ax.bbox)
+        """
+        
+        xCoords += [x]
+        tCoords += [lastFrameWithCircle]
+        plt.plot(tCoords,xCoords,'ro')
+        
+        
+        plot = False
+    
+    
+
+
+>>>>>>> origin/master
 
 """
     #COLOR DETECTION
