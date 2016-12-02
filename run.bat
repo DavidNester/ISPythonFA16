@@ -1,2 +1,0 @@
-python guivideotest.py
-Exit

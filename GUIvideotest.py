@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from PyQt4 import QtCore
 from PyQt4 import QtGui
-import Tkinter
+from Tkinter import *
 import tkFileDialog
 import os
 import matplotlib.pyplot as plt
@@ -13,6 +13,7 @@ from scipy.interpolate import interp1d
 from collections import deque
 import argparse
 import imutils
+from alembic.command import current
 
 
 """INPUT FILE"""
@@ -76,6 +77,8 @@ def on_mouse(event,x,y,flags,params):
                 pause = False
                 center = outside = None
                 img = extra.clear()
+                
+                
             #if first click (center)
             else:
                 center = (x,y)
@@ -107,9 +110,10 @@ def onChanged(x):
 
 """advances current frame and considers pause and speed"""  
 def advance():
-    global finalFrame,currentFrame,pause
+    global finalFrame,currentFrame,pause,plot
     #only advance if video is not paused or at the end
     if not pause and not finalFrame:
+        plot = True
         if speed == 0:
             if currentFrame + 1 < length:
                 currentFrame += 1
@@ -180,6 +184,10 @@ def findCircles(frame):
         img = extra.feedback("Please click on the center of the circle")
     return frame
 
+def submitData():
+    global size, fps
+    size = e1.get()
+    fps = e2.get()
 """BEGINNING OF THE CODE"""
 
     
@@ -192,7 +200,6 @@ def findCircles(frame):
         print "Please enter an Integer value"
 """        
 video = 'pendulum.MOV'
-fps = 123
 
 #video data
 cap = cv2.VideoCapture(video)
@@ -207,6 +214,8 @@ currentFrame = 1
 speed = 0
 finalFrame = False
 pause = True #video starts paused
+plot = False
+plt.ion()
 
 cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
@@ -218,10 +227,26 @@ lastFrameWithCircle = 0
 
 img = cv2.imread('white.png')
 cv2.moveWindow('frame',0,0)
+
 cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle")
 cv2.imshow('Instructions',img)
+
+
+xCoords = []
+yCoords = []
+rCoords = []
+tCoords = []
+dCoords = []
+size_pixel = 0
+size = 0
+fps = 123
+xdistance_cm = 0
+xdistance_in = 0
+ydistance_cm = 0
+ydistance_in = 0
+        
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
     #advance frame
@@ -267,12 +292,27 @@ while(True):
     ret, frame = cap.read()
     frame = extra.process(frame,height,width,fps,cap)
     
+    
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',currentFrame)
     
     #if we already have the frame in memory then use circles that were found
     if currentFrame in circleCoords.keys():
         x,y,r = circleCoords[currentFrame]
+        if size == 0:
+            master = Tk()
+            Label(master, text="Radius of the Circle(cm): ").grid(row=0)
+            Label(master, text="Frames Per Second: ").grid(row=1)
+            
+            e1 = Entry(master)
+            e2 = Entry(master)
+            
+            e1.grid(row=0, column=1)
+            e2.grid(row=1, column=1)
+            
+            Button(master, text='Submit', command=submitData).grid(row=2, column=1, sticky=W, pady=4)
+            mainloop()
+        size_pixel = r/float(size)
         
         # draw the circle in the output image, then draw a rectangle
         # corresponding to the center of the circle
@@ -288,11 +328,22 @@ while(True):
         cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
-    
-    
-
-    
-
+    """Plots motion in matplotlib"""
+    if plot:
+        
+        x,y,r = circleCoords[lastFrameWithCircle]
+        xCoords += [x]
+        yCoords += [y]
+        rCoords += [r]
+        tCoords += [lastFrameWithCircle]
+        #plot the data
+        plt.plot(tCoords,xCoords,'ro')
+        plot = False
+        xdistance_cm = (max(xCoords) - min(xCoords)) / size_pixel
+        xdistance_in = xdistance_cm/ 2.54  
+        
+        ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
+        ydistance_in = ydistance_cm/ 2.54
 
 """
     #COLOR DETECTION
@@ -344,9 +395,19 @@ while(True):
     cv2.imshow('mask',mask)
 """
     
-    
-    
-    
+
+master = Tk()
+resultx = StringVar()
+resulty = StringVar()
+response = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
+responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
+resultx.set(response)
+resulty.set(responsey)
+Label(master, textvariable=resultx).grid(row=0)
+Label(master, textvariable=resulty).grid(row=1)
+
+mainloop()
+
 #end video viewing
 cap.release()
 cv2.destroyAllWindows()
@@ -371,9 +432,9 @@ plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
 plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
-plt.figure(2)
+"""plt.figure(2)
 plt.subplot(211)
-plt.plot(tCoords,rCoords,'ro')
+plt.plot(tCoords,rCoords,'r--')"""
 """f = interp1d(tCoords,xCoords, kind = 'cubic')
 plt.subplot(212)
 xnew = np.linspace(0,max(tCoords),num = 2*len(tCoords),endpoint = True)
