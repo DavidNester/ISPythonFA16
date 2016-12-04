@@ -81,13 +81,11 @@ def on_mouse(event,x,y,flags,params):
                 #return to normal state
                 pause = False
                 center = outside = None
-                img = extra.clear()
-                
-                
+                img = extra.clear(pause)
             #if first click (center)
             else:
                 center = (x,y)
-                img = extra.feedback("Please click on the edge of the circle")
+                img = extra.feedback("Please click on the edge of the circle",pause)
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -186,7 +184,7 @@ def findCircles(frame):
     #if we havent found a circle in more than 10 frames then ask the user for help
     if currentFrame-lastFrameWithCircle > 10:
         pause = True
-        img = extra.feedback("Please click on the center of the circle")
+        img = extra.feedback("Please click on the center of the circle",pause)
     return frame
 
 def submitData():
@@ -236,8 +234,9 @@ cv2.moveWindow('frame',0,0)
 
 cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
-img = extra.feedback("Please click on the center of the circle")
+img = extra.feedback("Please click on the center of the circle",pause)
 cv2.imshow('Instructions',img)
+
 
 xCoords = []
 yCoords = []
@@ -276,6 +275,7 @@ while(True):
             pause = False
         else:
             pause = True
+        img = extra.feedback("",pause)
     #quit
     if key == ord('q'):
         break
@@ -299,7 +299,7 @@ while(True):
         if pause:
             center = None
             outside = None
-            img = extra.feedback("Please click on the center of the circle")
+            img = extra.feedback("Please click on the center of the circle",pause)
         
 
     #get frame
@@ -345,6 +345,7 @@ while(True):
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
     if plot:
+    if plot and first is not None:
         
        xCoords = []
        yCoords = []
@@ -395,7 +396,8 @@ while(True):
         plot = False
     
     
-
+        ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
+        ydistance_in = ydistance_cm/ 2.54
 
 """
     #COLOR DETECTION
