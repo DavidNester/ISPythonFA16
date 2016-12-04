@@ -237,7 +237,6 @@ cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle",pause)
 cv2.imshow('Instructions',img)
 
-<<<<<<< HEAD
 
 xCoords = []
 yCoords = []
@@ -334,7 +333,6 @@ while(True):
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
-<<<<<<< HEAD
     if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
