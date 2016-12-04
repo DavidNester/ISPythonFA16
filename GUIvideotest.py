@@ -220,10 +220,7 @@ speed = 0
 finalFrame = False
 pause = True #video starts paused
 plot = False
-<<<<<<< HEAD
-=======
 first = None
->>>>>>> origin/master
 plt.ion()
 
 cv2.namedWindow('frame')
@@ -242,8 +239,6 @@ cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle")
 cv2.imshow('Instructions',img)
 
-<<<<<<< HEAD
-
 xCoords = []
 yCoords = []
 rCoords = []
@@ -257,7 +252,6 @@ xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
         
-=======
 xCoords = []
 tCoords = []
 
@@ -268,7 +262,6 @@ plt.show(False)
 plt.draw()
 background = fig.canvas.copy_from_bbox(ax.bbox)
 """     
->>>>>>> origin/master
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
     #advance frame
@@ -351,23 +344,34 @@ while(True):
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
-<<<<<<< HEAD
     if plot:
         
-        x,y,r = circleCoords[lastFrameWithCircle]
-        xCoords += [x]
-        yCoords += [y]
-        rCoords += [r]
-        tCoords += [lastFrameWithCircle]
-        #plot the data
-        plt.plot(tCoords,xCoords,'ro')
-        plot = False
-        xdistance_cm = (max(xCoords) - min(xCoords)) / size_pixel
-        xdistance_in = xdistance_cm/ 2.54  
+       xCoords = []
+       yCoords = []
+       rCoords = []
+       tCoords = [] 
         
-        ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
-        ydistance_in = ydistance_cm/ 2.54
-=======
+       #get all frames,x,y,r and store each in their own array
+       for frame in circleCoords.keys():
+           x,y,r = circleCoords[frame]
+           xCoords += [x]
+           yCoords += [y]
+           rCoords += [r]
+           tCoords += [frame]
+       #plot the data
+       plt.figure(1)
+       plt.subplot(211)
+       plt.plot(tCoords,xCoords,'ro')
+       plt.subplot(212)
+       plt.plot(tCoords,yCoords,'ro')
+       #plt.subplot(213)
+       #plt.plot(tCoords,rCoords, 'ro')
+       plot = False
+       xdistance_cm = (max(xCoords) - min(xCoords)) / size_pixel
+       xdistance_in = xdistance_cm/ 2.54  
+       
+       ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
+       ydistance_in = ydistance_cm/ 2.54
     if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
@@ -392,8 +396,6 @@ while(True):
     
     
 
-
->>>>>>> origin/master
 
 """
     #COLOR DETECTION
