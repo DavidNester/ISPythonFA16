@@ -81,13 +81,11 @@ def on_mouse(event,x,y,flags,params):
                 #return to normal state
                 pause = False
                 center = outside = None
-                img = extra.clear()
-                
-                
+                img = extra.clear(pause)
             #if first click (center)
             else:
                 center = (x,y)
-                img = extra.feedback("Please click on the edge of the circle")
+                img = extra.feedback("Please click on the edge of the circle",pause)
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -186,7 +184,7 @@ def findCircles(frame):
     #if we havent found a circle in more than 10 frames then ask the user for help
     if currentFrame-lastFrameWithCircle > 10:
         pause = True
-        img = extra.feedback("Please click on the center of the circle")
+        img = extra.feedback("Please click on the center of the circle",pause)
     return frame
 
 def submitData():
@@ -220,10 +218,7 @@ speed = 0
 finalFrame = False
 pause = True #video starts paused
 plot = False
-<<<<<<< HEAD
-=======
 first = None
->>>>>>> origin/master
 plt.ion()
 
 cv2.namedWindow('frame')
@@ -239,7 +234,7 @@ cv2.moveWindow('frame',0,0)
 
 cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
-img = extra.feedback("Please click on the center of the circle")
+img = extra.feedback("Please click on the center of the circle",pause)
 cv2.imshow('Instructions',img)
 
 <<<<<<< HEAD
@@ -256,19 +251,6 @@ xdistance_cm = 0
 xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
-        
-=======
-xCoords = []
-tCoords = []
-
-fig, ax = plt.subplots(1, 1)
-ax.set_xlim(0, length)
-"""
-plt.show(False)
-plt.draw()
-background = fig.canvas.copy_from_bbox(ax.bbox)
-"""     
->>>>>>> origin/master
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
     #advance frame
@@ -283,6 +265,7 @@ while(True):
             pause = False
         else:
             pause = True
+        img = extra.feedback("",pause)
     #quit
     if key == ord('q'):
         break
@@ -306,7 +289,7 @@ while(True):
         if pause:
             center = None
             outside = None
-            img = extra.feedback("Please click on the center of the circle")
+            img = extra.feedback("Please click on the center of the circle",pause)
         
 
     #get frame
@@ -352,7 +335,7 @@ while(True):
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
 <<<<<<< HEAD
-    if plot:
+    if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
         xCoords += [x]
@@ -367,33 +350,6 @@ while(True):
         
         ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
         ydistance_in = ydistance_cm/ 2.54
-=======
-    if plot and first is not None:
-        
-        x,y,r = circleCoords[lastFrameWithCircle]
-        """
-        points.set_data(lastFrameWithCircle,x)
-        # restore background
-        fig.canvas.restore_region(background)
-
-        # redraw just the points
-        ax.draw_artist(points)
-
-        # fill in the axes rectangle
-        fig.canvas.blit(ax.bbox)
-        """
-        
-        xCoords += [x]
-        tCoords += [lastFrameWithCircle]
-        plt.plot(tCoords,xCoords,'ro')
-        
-        
-        plot = False
-    
-    
-
-
->>>>>>> origin/master
 
 """
     #COLOR DETECTION

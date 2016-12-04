@@ -78,17 +78,23 @@ class MyWindow(QtGui.QDialog):    # any super class is okay
         # here put the code that creates the new window and shows it.
         child = MyWindow(self)
         child.show()
-        
-def feedback(feedback):
-    img=clear()
+
+"""puts feedback on window and creates instruction window"""    
+def feedback(feedback,pause):
+    img=clear(pause)
     cv2.putText(img,feedback,(0,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,255,0))
     return img
-def clear():
+
+"""writes instructions on window"""
+def clear(pause):
     img = cv2.imread('white.png')
     cv2.putText(img,'q = quit',(0,80), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
     cv2.putText(img,'w = slow down',(0,105), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
     cv2.putText(img,'e = speed up',(0,130), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
-    cv2.putText(img,'p = pause',(0,155), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
+    if pause:
+        cv2.putText(img,'p = pause',(0,155), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,255,0))
+    else:
+        cv2.putText(img,'p = pause',(0,155), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
     cv2.putText(img,'delete = clear mouse input (when paused)',(300,80), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
     cv2.putText(img,'->    = next frame (when paused)',(300,105), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
     cv2.putText(img,'<-    = previous frame (when paused)',(300,130), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255))
