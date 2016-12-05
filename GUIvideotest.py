@@ -484,8 +484,12 @@ for frame in circleCoords.keys():
 plt.figure(1)
 plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
+plt.xlabel('Frame')
+plt.ylabel('x-pixel')
 plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
+plt.xlabel('Frame')
+plt.ylabel('y-pixel')
 """plt.figure(2)
 plt.subplot(211)
 plt.plot(tCoords,rCoords,'r--')"""
