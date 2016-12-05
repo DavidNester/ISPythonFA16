@@ -31,7 +31,7 @@ def process(frame,height,width,fps,cap):
         cv2.line(frame,(0,i*100),(width,i*100),(0,0,0),1)
     for i in range(1+(width/100)):
         cv2.line(frame,(i*100,0),(i*100,height),(0,0,0),1)
-    #frame = cv2.resize(frame,(0,0),fx=2,fy=2)
+    frame = cv2.resize(frame,(0,0),fx=2,fy=2)
     return frame
 
 

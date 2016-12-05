@@ -345,7 +345,6 @@ while(True):
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
     if plot:
-    if plot and first is not None:
         
        xCoords = []
        yCoords = []
@@ -396,8 +395,11 @@ while(True):
         plot = False
     
     
+
+
         ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
         ydistance_in = ydistance_cm/ 2.54
+
 
 """
     #COLOR DETECTION
