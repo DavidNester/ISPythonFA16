@@ -17,17 +17,23 @@ import argparse
 import imutils
 from alembic.command import current
 
+global size, r_pixel
+size = 0
+
+def submitData():
+    global size, fps
+    size = float(e1.get())
+    fps = e2.get()
 
 """INPUT FILE"""
-"""
-root = Tkinter.Tk()
+root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
                                                          ,("All files", "*.*"))) #requests file name and type of files
 root.destroy()
-    """
+
 #Code for creating windows
 # QApplication created only here.
 app = QtGui.QApplication([])
@@ -40,6 +46,19 @@ endPoint = False
 option = 1
 color = (255, 0, 255)
 
+master = Tk()
+Label(master, text="Radius Size (cm): ").grid(row=0)
+Label(master, text="Frames per Second: ").grid(row=1)
+
+e1 = Entry(master)
+e2 = Entry(master)
+
+e1.grid(row=0, column=1)
+e2.grid(row=1, column=1)
+
+Button(master, text='Submit', command=submitData).grid(row=3, column=1, sticky=W, pady=4)
+
+mainloop( )
 
 #used for mouse input from user
 center = None
@@ -51,12 +70,13 @@ def on_mouse(event,x,y,flags,params):
     #global rect,startPoint,endPoint
     global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,img,first,points,ax,plot
     #get only left mouse click
+   
     if event == cv2.EVENT_LBUTTONDOWN:
         #make sure click was in window
         if x<0 or x>width or y<0 or y>height:
             pass
-        #only use if paused (paused when nothing is found)
-        elif pause:
+        #only use if paused (paused when nothing is found)'
+        if pause:
             #if second click (outside)
             if center is not None:
                 outside = (x,y)
@@ -73,6 +93,7 @@ def on_mouse(event,x,y,flags,params):
                 r = distance(center,outside)
                 circleCoords[currentFrame] = (x,y,r)
                 cv2.setTrackbarPos('Frames','frame',currentFrame)
+                
                 cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                 cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 lastFrameWithCircle = currentFrame
@@ -187,10 +208,6 @@ def findCircles(frame):
         img = extra.feedback("Please click on the center of the circle",pause)
     return frame
 
-def submitData():
-    global size, fps
-    size = e1.get()
-    fps = e2.get()
 """BEGINNING OF THE CODE"""
 
     
@@ -202,7 +219,7 @@ def submitData():
     except:
         print "Please enter an Integer value"
 """        
-video = 'pendulum.MOV'
+video = tempdir
 
 #video data
 cap = cv2.VideoCapture(video)
@@ -237,14 +254,14 @@ cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle",pause)
 cv2.imshow('Instructions',img)
 
-
+foundR = False
 xCoords = []
 yCoords = []
 rCoords = []
 tCoords = []
 dCoords = []
 size_pixel = 0
-size = 0
+r_pixel = 0
 fps = 123
 xdistance_cm = 0
 xdistance_in = 0
@@ -314,20 +331,6 @@ while(True):
     #if we already have the frame in memory then use circles that were found
     if currentFrame in circleCoords.keys():
         x,y,r = circleCoords[currentFrame]
-        if size == 0:
-            master = Tk()
-            Label(master, text="Radius of the Circle(cm): ").grid(row=0)
-            Label(master, text="Frames Per Second: ").grid(row=1)
-            
-            e1 = Entry(master)
-            e2 = Entry(master)
-            
-            e1.grid(row=0, column=1)
-            e2.grid(row=1, column=1)
-            
-            Button(master, text='Submit', command=submitData).grid(row=2, column=1, sticky=W, pady=4)
-            mainloop()
-        size_pixel = r/float(size)
         
         # draw the circle in the output image, then draw a rectangle
         # corresponding to the center of the circle
@@ -344,6 +347,7 @@ while(True):
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
     """Plots motion in matplotlib"""
+    
     if plot:
         
        xCoords = []
@@ -358,6 +362,11 @@ while(True):
            yCoords += [y]
            rCoords += [r]
            tCoords += [frame]
+           
+           if foundR == False:
+               r_pixel = r
+               foundR=True
+       size_pixel = int(r_pixel)/size
        #plot the data
        plt.figure(1)
        plt.subplot(211)
@@ -367,11 +376,11 @@ while(True):
        #plt.subplot(213)
        #plt.plot(tCoords,rCoords, 'ro')
        plot = False
-       xdistance_cm = (max(xCoords) - min(xCoords)) / size_pixel
-       xdistance_in = xdistance_cm/ 2.54  
+       xdistance_cm = round(((max(xCoords) - min(xCoords)) / size_pixel),2)
+       xdistance_in = round((xdistance_cm/ 2.54),2)  
        
-       ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
-       ydistance_in = ydistance_cm/ 2.54
+       ydistance_cm = round(((max(yCoords) - min(yCoords)) / size_pixel),2)
+       ydistance_in = round((ydistance_cm/ 2.54),2)
     if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
@@ -394,11 +403,6 @@ while(True):
         
         plot = False
     
-    
-
-
-        ydistance_cm = (max(yCoords) - min(yCoords)) / size_pixel
-        ydistance_in = ydistance_cm/ 2.54
 
 
 """
