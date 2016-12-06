@@ -15,7 +15,6 @@ from scipy.interpolate import interp1d
 from collections import deque
 import argparse
 import imutils
-from alembic.command import current
 
 global size, r_pixel
 size = 0
@@ -472,7 +471,7 @@ mainloop()
 cap.release()
 cv2.destroyAllWindows()
 
-
+plt.ioff()
 """Plots motion in matplotlib"""
 xCoords = []
 yCoords = []
