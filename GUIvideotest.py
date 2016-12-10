@@ -6,8 +6,6 @@ from PyQt4 import QtGui
 from Tkinter import *
 import tkFileDialog
 import os
-"""import matplotlib
-matplotlib.use('GTKAgg')"""
 import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
@@ -285,33 +283,29 @@ while(True):
     """BUTTON COMMANDS"""
     #get button press
     key = cv2.waitKey(1) & 0xFF
-    #pause
-    if key == ord('p'):
+    
+    if key == ord('p'):#pause
         if pause:
             pause = False
         else:
             pause = True
         img = extra.feedback("",pause)
-    #quit
-    if key == ord('q'):
+    if key == ord('q'):#quit
         break
-    #slower
-    if key == ord('w'):
+    if key == ord('w'):#slower
         if speed > -3:
             speed -= 1
-    #faster
-    if key == ord('e'):
+    if key == ord('e'):#faster
         if speed < 3:
             speed += 1
-    #drawing options
-    if key == ord('t'):
-        window.show()
-    #left key -> advance frame    
-    if key == 3:
+    """not really used anymore"""
+    #if key == ord('t'):#drawing options
+    #   window.show()
+    if key == 3: #right arrow
         currentFrame += 1
-    if key == 2:
+    if key == 2: #left arrow
         currentFrame -= 1
-    if key == 127:
+    if key == 127: #delete key -> get rid of mouse input
         if pause:
             center = None
             outside = None
@@ -343,10 +337,13 @@ while(True):
             
     if center and not outside:
         cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
+    
+    #show frames
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
-    """Plots motion in matplotlib"""
     
+    
+    """Plots motion in matplotlib"""
     if plot:
         
        xCoords = []
@@ -380,9 +377,12 @@ while(True):
        
        ydistance_cm = round(((max(yCoords) - min(yCoords)) / size_pixel),2)
        ydistance_in = round((ydistance_cm/ 2.54),2)
+    
     if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
+        
+        """Attempt at making plotting work on mac"""
         """
         points.set_data(lastFrameWithCircle,x)
         # restore background
@@ -398,7 +398,6 @@ while(True):
         xCoords += [x]
         tCoords += [lastFrameWithCircle]
         plt.plot(tCoords,xCoords,'ro')
-        
         
         plot = False
     
@@ -471,7 +470,7 @@ mainloop()
 cap.release()
 cv2.destroyAllWindows()
 
-plt.ioff()
+plt.clf()
 """Plots motion in matplotlib"""
 xCoords = []
 yCoords = []
@@ -495,6 +494,8 @@ plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
 plt.xlabel('Frame')
 plt.ylabel('y-pixel')
+
+"""attempt at data smoothing"""
 """plt.figure(2)
 plt.subplot(211)
 plt.plot(tCoords,rCoords,'r--')"""
