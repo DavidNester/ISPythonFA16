@@ -20,7 +20,7 @@ class CircleTracker:
     self.font = cv2.FONT_HERSHEY_SIMPLEX
     self.plot = False
     
-    def __init__(self,video,):
+    def __init__(self,video):
         self.height = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
         self.width = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self.length = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -59,14 +59,8 @@ class CircleTracker:
     
     def findCircles(self):
         #need to replace with process() and add self.
-        original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
-        retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
+        image = self.processImage()
         
-        el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-        image = cv2.dilate(image, el, iterations=4)
-        
-        image = cv2.GaussianBlur(image, (13, 13), 0)
-            
         found = False
         alpha = 90
         while not found:
@@ -97,11 +91,16 @@ class CircleTracker:
             if currentFrame-lastFrameWithCircle > 10:
                 pause = True
                 img = extra.feedback("Please click on the center of the circle",pause)
-            return frame
+            self.frame = frame
 
     
     def processImage(self):
-        pass
+        original = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
+        retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
+        el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        image = cv2.dilate(image, el, iterations=4)
+        image = cv2.GaussianBlur(image, (13, 13), 0)
+        return image
     
     def plot(self):
         plt.figure(1)
@@ -113,3 +112,12 @@ class CircleTracker:
         plt.plot(tCoords,yCoords,'ro')
         plt.xlabel('Frame')
         plt.ylabel('y-pixel')
+        """attempt at data smoothing"""
+        """plt.figure(2)
+        plt.subplot(211)
+        plt.plot(tCoords,rCoords,'r--')"""
+        """f = interp1d(tCoords,xCoords, kind = 'cubic')
+        plt.subplot(212)
+        xnew = np.linspace(0,max(tCoords),num = 2*len(tCoords),endpoint = True)
+        plt.plot(xnew,f(xCoords),'--')"""
+        plt.show()
