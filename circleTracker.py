@@ -27,7 +27,7 @@ class CircleTracker:
         self.video = video
     
     def updateFrame(self, new):
-        pass
+        self.currentFrame = new
     
     def advance(self):
         #only advance if video is not paused or at the end
@@ -41,6 +41,7 @@ class CircleTracker:
                 if self.currentFrame + self.speed**2 < self.length:
                         self.currentFrame += self.speed**2
             #if slowed down then pause before giving next frame
+            #This may not be the way we want to do this...
             elif self.speed < 0:
                 for i in range(self.speed**2):
                     time.sleep(.1)
@@ -58,7 +59,7 @@ class CircleTracker:
         return False
     
     def findCircles(self):
-        #need to replace with process() and add self.
+        #need to add self.
         image = self.processImage()
         
         found = False
@@ -70,14 +71,14 @@ class CircleTracker:
                 circles = np.round(circles[0, :]).astype("int")
                 #check if the circles agree with previous data
                 for x,y,r in circles:
-                    if normal(x,y,r):
+                    if self.normal(x,y,r):
                         found = True
                         circleCoords[currentFrame] = (x,y,r)
                         # draw the circle in the output image, then draw a rectangle
                         # corresponding to the center of the circle
-                        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-                        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                        lastFrameWithCircle = currentFrame
+                        cv2.circle(self.frame, (x, y), r+5, (228, 20, 20), 4)
+                        cv2.rectangle(self.frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                        self.lastFrameWithCircle = self.currentFrame
                 if not found:
                     alpha -= 5
                     if alpha <= 30:
@@ -88,10 +89,9 @@ class CircleTracker:
                 if alpha <= 30:
                     found = True
             #if we havent found a circle in more than 10 frames then ask the user for help
-            if currentFrame-lastFrameWithCircle > 10:
-                pause = True
-                img = extra.feedback("Please click on the center of the circle",pause)
-            self.frame = frame
+            if self.currentFrame-self.lastFrameWithCircle > 10:
+                self.pause = True
+                #img = extra.feedback("Please click on the center of the circle",pause)
 
     
     def processImage(self):
