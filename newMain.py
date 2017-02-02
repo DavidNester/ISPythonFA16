@@ -136,9 +136,6 @@ video = tempdir
 #video data
 cap = cv2.VideoCapture(video)
 tracker = CircleTracker(cap)
-print cap
-print tracker.video
-print tracker.height
 
 """VIDEO CONTROL VARIABLES AND DATA VARIABLES"""
 plot = False
@@ -205,9 +202,12 @@ while(True):
             outside = None
             img = extra.feedback("Please click on the center of the circle",tracker.pause)
         
-    tracker.test()
+
     #get frame
-    tracker.updateFrame()
+    cap.set(1,tracker.currentFrame)
+    ret, frame = cap.read()
+    frame = extra.process(frame,tracker.height,tracker.width,fps,cap)
+    tracker.updateFrame(frame)
     
     
     #sets the trackbar position equal to the frame number

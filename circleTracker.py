@@ -8,13 +8,9 @@ class CircleTracker:
         self.height = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
         self.width = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self.length = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        print vid
-        self.video = vid
-        print self.video
         #instance variables
-        self.video = None
         self.frame = None
-        self.currentFrame = None
+        self.currentFrame = 1
         self.lastFrameWithCircle = 0
         self.finalFrame = False
         self.speed = 0
@@ -27,15 +23,8 @@ class CircleTracker:
         self.plot = False
         self.first = None
         
-    def test(self):
-        print self.video
-    
-    def updateFrame(self):
-        #self.currentFrame = new
-        self.video.set(1,self.currentFrame)
-        ret,frame = self.video.read()
-        self.frame = extra.process(frame,self.height,self.width,720,self.video)
-    
+    def updateFrame(self,newFrame):
+        self.frame = newFrame
     def advance(self):
         #only advance if video is not paused or at the end
         if not self.pause and not self.finalFrame:
