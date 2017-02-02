@@ -15,6 +15,7 @@ class CircleTracker:
         self.finalFrame = False
         self.speed = 0
         self.pause = True
+        self.circleCoords = {}
         self.xCoords = []
         self.yCoords = []
         self.rCoords = []

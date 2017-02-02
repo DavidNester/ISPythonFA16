@@ -65,7 +65,7 @@ outside = None
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event,x,y,flags,params):
-    global tracker, plot
+    global tracker, plot, center, outside
     #get only left mouse click
    
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -145,8 +145,6 @@ cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,tracker.length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
-circleCoords = {} #all the (x,y,r) data for all of the circles
-#used for predicting location of next circle if one is not found for a while based on previous activity
 
 img = cv2.imread('white.png')
 cv2.moveWindow('frame',0,0)
@@ -173,6 +171,7 @@ ax.set_xlim(0, tracker.length)
 while(True):
     #advance frame
     tracker.advance()
+    print "something"
     
     """BUTTON COMMANDS"""
     #get button press
@@ -183,7 +182,7 @@ while(True):
             tracker.pause = False
         else:
             tracker.pause = True
-        img = extra.feedback("",pause)
+        img = extra.feedback("",tracker.pause)
     if key == ord('q'):#quit
         break
     if key == ord('w'):#slower
