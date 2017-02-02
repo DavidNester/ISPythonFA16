@@ -1,33 +1,40 @@
 import cv2
 import matplotlib
+import extra
 
 class CircleTracker:
-    #instance variables
-    self.video = None
-    self.frame = None
-    self.currentFrame = None
-    self.lastFrameWithCircle = 0
-    self.finalFrame = False
-    self.speed = 0
-    self.pause = True
-    self.xCoords = []
-    self.yCoords = []
-    self.rCoords = []
-    self.tCoords = []
-    self.height = 0
-    self.width = 0
-    self.length = 0
-    self.font = cv2.FONT_HERSHEY_SIMPLEX
-    self.plot = False
+
+    def __init__(self,vid):
+        self.height = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        self.width = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        self.length = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        print vid
+        self.video = vid
+        print self.video
+        #instance variables
+        self.video = None
+        self.frame = None
+        self.currentFrame = None
+        self.lastFrameWithCircle = 0
+        self.finalFrame = False
+        self.speed = 0
+        self.pause = True
+        self.xCoords = []
+        self.yCoords = []
+        self.rCoords = []
+        self.tCoords = []
+        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        self.plot = False
+        self.first = None
+        
+    def test(self):
+        print self.video
     
-    def __init__(self,video):
-        self.height = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-        self.width = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        self.length = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        self.video = video
-    
-    def updateFrame(self, new):
-        self.currentFrame = new
+    def updateFrame(self):
+        #self.currentFrame = new
+        self.video.set(1,self.currentFrame)
+        ret,frame = self.video.read()
+        self.frame = extra.process(frame,self.height,self.width,720,self.video)
     
     def advance(self):
         #only advance if video is not paused or at the end

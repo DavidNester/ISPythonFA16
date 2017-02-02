@@ -65,46 +65,45 @@ outside = None
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event,x,y,flags,params):
-    #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,img,first,points,ax,plot
+    global tracker, plot
     #get only left mouse click
    
     if event == cv2.EVENT_LBUTTONDOWN:
         #make sure click was in window
-        if x<0 or x>width or y<0 or y>height:
+        if x<0 or x>tracker.width or y<0 or y>tracker.height:
             pass
         #only use if paused (paused when nothing is found)'
-        if pause:
+        if tracker.pause:
             #if second click (outside)
             if center is not None:
                 outside = (x,y)
-                if first is None:
-                    first = (center[0],center[1],distance(center,outside),currentFrame)
+                if tracker.first is None:
+                    tracker.first = (center[0],center[1],distance(center,outside),tracker.currentFrame)
                     #points = ax.plot(currentFrame,center[0],'ro')[0]
                     plot = True
                 #draw inputted cricle on frame and then show it
                 cap.set(1,currentFrame)
                 ret, frame = cap.read()
-                frame = extra.process(frame,height,width,fps,cap)
-                #frame = memory[currentFrame]
+                tracker.updateFrame(frame)
+                
                 x,y = center
                 r = distance(center,outside)
-                circleCoords[currentFrame] = (x,y,r)
-                cv2.setTrackbarPos('Frames','frame',currentFrame)
+                tracker.circleCoords[tracker.currentFrame] = (x,y,r)
+                cv2.setTrackbarPos('Frames','frame',tracker.currentFrame)
                 
-                cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
-                cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                lastFrameWithCircle = currentFrame
-                cv2.imshow('frame', frame)
+                cv2.circle(tracker.frame, (x, y), r, (228, 20, 20), 4)
+                cv2.rectangle(tracker.frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                tracker.lastFrameWithCircle = tracker.currentFrame
+                cv2.imshow('frame', tracker.frame)
                 
                 #return to normal state
-                pause = False
+                tracker.pause = False
                 center = outside = None
-                img = extra.clear(pause)
+                img = extra.clear(tracker.pause)
             #if first click (center)
             else:
                 center = (x,y)
-                img = extra.feedback("Please click on the edge of the circle",pause)
+                img = extra.feedback("Please click on the edge of the circle",tracker.pause)
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -122,16 +121,13 @@ Function called when track bar is moved
 updates currentFrame and lastFrameWithCircle
 """
 def onChanged(x):
-    global currentFrame,finalFrame,lastFrameWithCircle, circleCoords
-    finalFrame = False
-    currentFrame = x
-    if lastFrameWithCircle != 0:
+    global tracker
+    tracker.finalFrame = False
+    tracker.currentFrame = x
+    if tracker.lastFrameWithCircle != 0:
         #lastFrameWith circle is highest frame in record that is less than the new currentFrame
-        lastFrameWithCircle = max([i for i in circleCoords.keys() if i < currentFrame])
+        tracker.lastFrameWithCircle = max([i for i in tracker.circleCoords.keys() if i < tracker.currentFrame])
 
-"""given a frame it finds the circle and returns the frame with the circle drawn on it"""
-"""def findCircles(frame):
-    global lastFrameWithCircle,pause,img"""
     
 """BEGINNING OF THE CODE"""
     
@@ -139,12 +135,13 @@ video = tempdir
 
 #video data
 cap = cv2.VideoCapture(video)
-tracker = circleTracker(cap)
-
+tracker = CircleTracker(cap)
+print cap
+print tracker.video
+print tracker.height
 
 """VIDEO CONTROL VARIABLES AND DATA VARIABLES"""
 plot = False
-first = None
 plt.ion()
 
 cv2.namedWindow('frame')
@@ -158,8 +155,8 @@ img = cv2.imread('white.png')
 cv2.moveWindow('frame',0,0)
 
 cv2.namedWindow('Instructions')
-cv2.moveWindow('Instructions',0,height+75)
-img = extra.feedback("Please click on the center of the circle",pause)
+cv2.moveWindow('Instructions',0,tracker.height+75)
+img = extra.feedback("Please click on the center of the circle",tracker.pause)
 cv2.imshow('Instructions',img)
 
 foundR = False
@@ -173,7 +170,7 @@ ydistance_cm = 0
 ydistance_in = 0
 
 fig, ax = plt.subplots(1, 1)
-ax.set_xlim(0, length)
+ax.set_xlim(0, tracker.length)
 
 """LOOP FOR DISPLAYING VIDEO"""
 while(True):
@@ -185,63 +182,60 @@ while(True):
     key = cv2.waitKey(1) & 0xFF
     
     if key == ord('p'):#pause
-        if pause:
-            pause = False
+        if tracker.pause:
+            tracker.pause = False
         else:
-            pause = True
+            tracker.pause = True
         img = extra.feedback("",pause)
     if key == ord('q'):#quit
         break
     if key == ord('w'):#slower
-        if speed > -3:
-            speed -= 1
+        if tracker.speed > -3:
+            tracker.speed -= 1
     if key == ord('e'):#faster
-        if speed < 3:
-            speed += 1
+        if tracker.speed < 3:
+            tracker.speed += 1
     if key == 3: #right arrow
-        currentFrame += 1
+        tracker.currentFrame += 1
     if key == 2: #left arrow
-        currentFrame -= 1
+        tracker.currentFrame -= 1
     if key == 127: #delete key -> get rid of mouse input
-        if pause:
+        if tracker.pause:
             center = None
             outside = None
-            img = extra.feedback("Please click on the center of the circle",pause)
+            img = extra.feedback("Please click on the center of the circle",tracker.pause)
         
-
+    tracker.test()
     #get frame
-    cap.set(1,currentFrame)
-    ret, frame = cap.read()
-    frame = extra.process(frame,height,width,fps,cap)
+    tracker.updateFrame()
     
     
     #sets the trackbar position equal to the frame number
-    cv2.setTrackbarPos('Frames','frame',currentFrame)
-    
+    cv2.setTrackbarPos('Frames','frame',tracker.currentFrame)
+    """
     #if we already have the frame in memory then use circles that were found
-    if currentFrame in circleCoords.keys():
+    if tracker.currentFrame in circleCoords.keys():
         x,y,r = circleCoords[currentFrame]
         
         # draw the circle in the output image, then draw a rectangle
         # corresponding to the center of the circle
         cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-    
+    """
     #find new circles if new frame and not paused
-    else:
-        if not pause:
-            frame = findCircles(frame)
-            
+    if not tracker.pause:
+        tracker.findCircles()
+   
     if center and not outside:
-        cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
+        cv2.rectangle(tracker.frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
     
     #show frames
     cv2.imshow('Instructions',img)
-    cv2.imshow('frame', frame)
+    cv2.imshow('frame', tracker.frame)
     
     
     """Plots motion in matplotlib"""
-    if plot:
+    """if plot:
         
        xCoords = []
        yCoords = []
@@ -274,13 +268,13 @@ while(True):
        
        ydistance_cm = round(((max(yCoords) - min(yCoords)) / size_pixel),2)
        ydistance_in = round((ydistance_cm/ 2.54),2)
-    
+    """
+    """
     if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
-        
-        """Attempt at making plotting work on mac"""
         """
+    """Attempt at making plotting work on mac
         points.set_data(lastFrameWithCircle,x)
         # restore background
         fig.canvas.restore_region(background)
@@ -291,13 +285,13 @@ while(True):
         # fill in the axes rectangle
         fig.canvas.blit(ax.bbox)
         """
-        
+    """
         xCoords += [x]
         tCoords += [lastFrameWithCircle]
         plt.plot(tCoords,xCoords,'ro')
         
         plot = False
-    
+        """
 
     
 
