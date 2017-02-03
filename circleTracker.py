@@ -1,6 +1,7 @@
 import cv2
 import matplotlib
 import extra
+import numpy as np
 
 class CircleTracker:
 
@@ -45,9 +46,9 @@ class CircleTracker:
                 if self.currentFrame + 1 < self.length:
                     self.currentFrame += 1
     
-    def normalize(self,x,y,r):
+    def normal(self,x,y,r):
         #accept data if we hae no prior knowledge
-        if lastFrameWithCircle == 0:
+        if self.lastFrameWithCircle == 0:
             return True
         oldX,oldY,oldR = self.circleCoords[self.lastFrameWithCircle]
         #make sure that the new circle agrees with the old circle
@@ -70,7 +71,7 @@ class CircleTracker:
                 for x,y,r in circles:
                     if self.normal(x,y,r):
                         found = True
-                        circleCoords[currentFrame] = (x,y,r)
+                        self.circleCoords[self.currentFrame] = (x,y,r)
                         # draw the circle in the output image, then draw a rectangle
                         # corresponding to the center of the circle
                         cv2.circle(self.frame, (x, y), r+5, (228, 20, 20), 4)

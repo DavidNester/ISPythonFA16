@@ -67,7 +67,7 @@ outside = None
 def on_mouse(event,x,y,flags,params):
     global tracker, plot, center, outside
     #get only left mouse click
-   
+    print "click"   
     if event == cv2.EVENT_LBUTTONDOWN:
         #make sure click was in window
         if x<0 or x>tracker.width or y<0 or y>tracker.height:
@@ -82,8 +82,9 @@ def on_mouse(event,x,y,flags,params):
                     #points = ax.plot(currentFrame,center[0],'ro')[0]
                     plot = True
                 #draw inputted cricle on frame and then show it
-                cap.set(1,currentFrame)
+                cap.set(1,tracker.currentFrame)
                 ret, frame = cap.read()
+                frame = extra.process(frame,tracker.height,tracker.width,fps,cap)
                 tracker.updateFrame(frame)
                 
                 x,y = center
@@ -171,12 +172,11 @@ ax.set_xlim(0, tracker.length)
 while(True):
     #advance frame
     tracker.advance()
-    print "something"
     
     """BUTTON COMMANDS"""
     #get button press
     key = cv2.waitKey(1) & 0xFF
-    
+    print key
     if key == ord('p'):#pause
         if tracker.pause:
             tracker.pause = False
@@ -211,16 +211,15 @@ while(True):
     
     #sets the trackbar position equal to the frame number
     cv2.setTrackbarPos('Frames','frame',tracker.currentFrame)
-    """
+
     #if we already have the frame in memory then use circles that were found
-    if tracker.currentFrame in circleCoords.keys():
-        x,y,r = circleCoords[currentFrame]
+    if tracker.currentFrame in tracker.circleCoords.keys():
+        x,y,r = tracker.circleCoords[tracker.currentFrame]
         
         # draw the circle in the output image, then draw a rectangle
         # corresponding to the center of the circle
-        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-    """
+        cv2.circle(tracker.frame, (x, y), r+5, (228, 20, 20), 4)
+        cv2.rectangle(tracker.frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
     #find new circles if new frame and not paused
     if not tracker.pause:
         tracker.findCircles()
