@@ -6,8 +6,11 @@ from PyQt4 import QtGui
 from Tkinter import *
 import tkFileDialog
 import os
-"""import matplotlib
-matplotlib.use('GTKAgg')"""
+from multiprocessing import Process, Queue
+from Queue import Empty
+import cv2.cv as cv
+from PIL import Image, ImageTk
+import time
 import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
@@ -17,23 +20,123 @@ import argparse
 import imutils
 from alembic.command import current
 
-global size, r_pixel
+import matplotlib
+matplotlib.use("TkAgg")
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+
+global size, r_pixel, f, a, count, w
+count = 1
 size = 0
 
 def submitData():
     global size, fps
     size = float(e1.get())
     fps = e2.get()
+    master.destroy()
 
 """INPUT FILE"""
 root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
-tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
-                                                         ,("HTML files", "*.html;*.htm")
+tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm")
+                                                        ,("Movie files", "*.MOV")
                                                          ,("All files", "*.*"))) #requests file name and type of files
 root.destroy()
+print tempdir
+"""Creating windows"""
+#tkinter GUI functions----------------------------------------------------------
+def quit_(root):
+   root.destroy()
+   
+def update_image(image_label, list, count):
+   frame = list[count]
+   im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+   a = Image.fromarray(im)
+   b = ImageTk.PhotoImage(image=a)
+   image_label.configure(image=b)
+   image_label._image_cache = b  # avoid garbage collection
+   root.update()
 
+pause = True
+
+def update_all(root, image_label, list):
+   global count
+   if pause == False and count+1 < len(list):
+       count += 1
+       w.set(count)
+       update_image(image_label, list, count)
+       root.after(0, func=lambda: update_all(root, image_label, list))
+
+#multiprocessing image processing functions-------------------------------------
+def image_capture(list):
+   vidFile = cv2.VideoCapture(tempdir)
+   while True:
+      try:
+         flag, frame=vidFile.read()
+         if flag==0:
+             break
+         list.append(frame)
+         
+      except:
+         continue
+     
+def playVideo(root, image_label, list):
+    global pause
+    pause = False
+    update_all(root, image_label, list)
+    
+def pauseVideo():
+    global pause
+    pause = True
+    
+def updateCount(self):
+    global count
+    count = w.get()
+    
+    
+if __name__ == '__main__':
+   list = list()
+   root = Tk()
+   image_label = Label(master=root)# label for the video frame
+   image_label.grid(row=0, column=0, columnspan=2)
+   p = image_capture(list)
+   
+   f = Figure(figsize=(5,5), dpi=100)
+   a = f.add_subplot(111)
+   
+   canvas = FigureCanvasTkAgg(f, master=root)
+   canvas.show()
+   canvas.get_tk_widget().grid(row=0, column=2, rowspan=4)
+   
+   size = len(list)
+   update_image(image_label, list, 0)
+   slider_width = image_label.winfo_width()
+   w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
+   w.bind("<ButtonRelease-1>", updateCount)
+   w.grid(row=1, column=0, columnspan=2)
+
+   # pause button
+   pauseButton = Button(master=root, text="Pause", command=pauseVideo)
+   pauseButton.grid(row=2, column=0)
+   
+   #play button
+   playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
+   playButton.grid(row=2, column=1)
+   
+   instruction = Label(master=root, text="Click on the center of the circle")
+   instruction.grid(row=3, column=0, columnspan=2)
+   # setup the update callback
+   root.after(0, func=lambda: update_all(root, image_label, list))
+   print 'finished video'
+   
+   root.lift()
+   root.attributes('-topmost',True)
+   root.after_idle(root.attributes,'-topmost',False)
+   mainloop()
+
+""""""
 #Code for creating windows
 # QApplication created only here.
 app = QtGui.QApplication([])
@@ -58,7 +161,6 @@ e2.grid(row=1, column=1)
 
 Button(master, text='Submit', command=submitData).grid(row=3, column=1, sticky=W, pady=4)
 
-mainloop( )
 
 #used for mouse input from user
 center = None
@@ -87,17 +189,17 @@ def on_mouse(event,x,y,flags,params):
                 #draw inputted cricle on frame and then show it
                 cap.set(1,currentFrame)
                 ret, frame = cap.read()
-                frame = extra.process(frame,height,width,fps,cap)
+                #frame = extra.process(frame,height,width,fps,cap)
                 #frame = memory[currentFrame]
                 x,y = center
                 r = distance(center,outside)
                 circleCoords[currentFrame] = (x,y,r)
-                cv2.setTrackbarPos('Frames','frame',currentFrame)
+                #cv2.setTrackbarPos('Frames','frame',currentFrame)
                 
                 cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
                 cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 lastFrameWithCircle = currentFrame
-                cv2.imshow('frame', frame)
+                #cv2.imshow('frame', frame)
                 
                 #return to normal state
                 pause = False
@@ -208,6 +310,7 @@ def findCircles(frame):
         img = extra.feedback("Please click on the center of the circle",pause)
     return frame
 
+
 """BEGINNING OF THE CODE"""
 
     
@@ -238,6 +341,7 @@ plot = False
 first = None
 plt.ion()
 
+"""
 cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
@@ -246,13 +350,13 @@ circleCoords = {} #all the (x,y,r) data for all of the circles
 #used for predicting location of next circle if one is not found for a while based on previous activity
 lastFrameWithCircle = 0
 
-img = cv2.imread('white.png')
 cv2.moveWindow('frame',0,0)
 
 cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle",pause)
-cv2.imshow('Instructions',img)
+#cv2.imshow('Instructions',img)
+"""
 
 foundR = False
 xCoords = []
@@ -286,33 +390,29 @@ while(True):
     """BUTTON COMMANDS"""
     #get button press
     key = cv2.waitKey(1) & 0xFF
-    #pause
-    if key == ord('p'):
+    
+    if key == ord('p'):#pause
         if pause:
             pause = False
         else:
             pause = True
         img = extra.feedback("",pause)
-    #quit
-    if key == ord('q'):
+    if key == ord('q'):#quit
         break
-    #slower
-    if key == ord('w'):
+    if key == ord('w'):#slower
         if speed > -3:
             speed -= 1
-    #faster
-    if key == ord('e'):
+    if key == ord('e'):#faster
         if speed < 3:
             speed += 1
-    #drawing options
-    if key == ord('t'):
-        window.show()
-    #left key -> advance frame    
-    if key == 3:
+    """not really used anymore"""
+    #if key == ord('t'):#drawing options
+    #   window.show()
+    if key == 3: #right arrow
         currentFrame += 1
-    if key == 2:
+    if key == 2: #left arrow
         currentFrame -= 1
-    if key == 127:
+    if key == 127: #delete key -> get rid of mouse input
         if pause:
             center = None
             outside = None
@@ -322,11 +422,12 @@ while(True):
     #get frame
     cap.set(1,currentFrame)
     ret, frame = cap.read()
-    frame = extra.process(frame,height,width,fps,cap)
+    cv2.imshow('test', frame)
+    #frame = extra.process(frame,height,width,fps,cap)
     
     
     #sets the trackbar position equal to the frame number
-    cv2.setTrackbarPos('Frames','frame',currentFrame)
+    #cv2.setTrackbarPos('Frames','frame',currentFrame)
     
     #if we already have the frame in memory then use circles that were found
     if currentFrame in circleCoords.keys():
@@ -334,20 +435,23 @@ while(True):
         
         # draw the circle in the output image, then draw a rectangle
         # corresponding to the center of the circle
-        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+        #cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
+        #cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
     
     #find new circles if new frame and not paused
     else:
         if not pause:
             frame = findCircles(frame)
             
-    if center and not outside:
-        cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
-    cv2.imshow('Instructions',img)
-    cv2.imshow('frame', frame)
-    """Plots motion in matplotlib"""
+    #if center and not outside:
+        #cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
     
+    #show frames
+    #cv2.imshow('Instructions',img)
+    #cv2.imshow('frame', frame)
+    
+    
+    """Plots motion in matplotlib"""
     if plot:
         
        xCoords = []
@@ -370,7 +474,7 @@ while(True):
        #plot the data
        plt.figure(1)
        plt.subplot(211)
-       plt.plot(tCoords,xCoords,'ro')
+       a.plot(tCoords,xCoords,'ro')
        plt.subplot(212)
        plt.plot(tCoords,yCoords,'ro')
        #plt.subplot(213)
@@ -381,17 +485,18 @@ while(True):
        
        ydistance_cm = round(((max(yCoords) - min(yCoords)) / size_pixel),2)
        ydistance_in = round((ydistance_cm/ 2.54),2)
+    
     if plot and first is not None:
         
         x,y,r = circleCoords[lastFrameWithCircle]
+        
+        """Attempt at making plotting work on mac"""
         """
         points.set_data(lastFrameWithCircle,x)
         # restore background
         fig.canvas.restore_region(background)
-
         # redraw just the points
         ax.draw_artist(points)
-
         # fill in the axes rectangle
         fig.canvas.blit(ax.bbox)
         """
@@ -399,7 +504,6 @@ while(True):
         xCoords += [x]
         tCoords += [lastFrameWithCircle]
         plt.plot(tCoords,xCoords,'ro')
-        
         
         plot = False
     
@@ -487,6 +591,7 @@ for frame in circleCoords.keys():
     rCoords += [r]
     tCoords += [frame]
 #plot the data
+
 plt.figure(1)
 plt.subplot(211)
 plt.plot(tCoords,xCoords,'ro')
