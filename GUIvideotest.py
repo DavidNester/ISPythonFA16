@@ -18,7 +18,6 @@ from scipy.interpolate import interp1d
 from collections import deque
 import argparse
 import imutils
-from alembic.command import current
 
 import matplotlib
 matplotlib.use("TkAgg")
@@ -451,6 +450,14 @@ while(True):
     #cv2.imshow('frame', frame)
     
     
+    if center and not outside:
+        cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
+    
+    #show frames
+    cv2.imshow('Instructions',img)
+    cv2.imshow('frame', frame)
+    
+    
     """Plots motion in matplotlib"""
     if plot:
         
@@ -576,7 +583,7 @@ mainloop()
 cap.release()
 cv2.destroyAllWindows()
 
-
+plt.clf()
 """Plots motion in matplotlib"""
 xCoords = []
 yCoords = []
@@ -601,6 +608,8 @@ plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
 plt.xlabel('Frame')
 plt.ylabel('y-pixel')
+
+"""attempt at data smoothing"""
 """plt.figure(2)
 plt.subplot(211)
 plt.plot(tCoords,rCoords,'r--')"""
