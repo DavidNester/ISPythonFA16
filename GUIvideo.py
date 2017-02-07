@@ -18,9 +18,9 @@ from scipy.interpolate import interp1d
 from collections import deque
 import argparse
 import imutils
-from alembic.command import current
 
 import matplotlib
+from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -29,6 +29,7 @@ from matplotlib.figure import Figure
 global size, r_pixel, f, a, count, w
 count = 1
 size = 0
+speed = 0
 
 def submitData():
     global size, fps
@@ -62,7 +63,12 @@ def update_image(image_label, list, count):
 pause = True
 
 def update_all(root, image_label, list):
-   global count
+   global count, speed
+   if speed < 0:
+       time.sleep((speed*.1)*-1) 
+   elif speed > 0:
+       count = count + (1*speed)
+    
    if pause == False and count+1 < len(list):
        count += 1
        w.set(count)
@@ -91,16 +97,25 @@ def pauseVideo():
     global pause
     pause = True
     
-def updateCount(self):
+def updateCount(image_label, list):
     global count
     count = w.get()
+    update_image(image_label, list, count)
+    
+def slowDown():
+    global speed
+    speed -= 1
+    
+def fastForward():
+    global speed
+    speed += 1
     
     
 if __name__ == '__main__':
    list = list()
    root = Tk()
    image_label = Label(master=root)# label for the video frame
-   image_label.grid(row=0, column=0, columnspan=2)
+   image_label.grid(row=0, column=0, columnspan=4)
    p = image_capture(list)
    
    f = Figure(figsize=(5,5), dpi=100)
@@ -108,14 +123,14 @@ if __name__ == '__main__':
    
    canvas = FigureCanvasTkAgg(f, master=root)
    canvas.show()
-   canvas.get_tk_widget().grid(row=0, column=2, rowspan=4)
+   canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
    
    size = len(list)
    update_image(image_label, list, 0)
    slider_width = image_label.winfo_width()
    w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
-   w.bind("<ButtonRelease-1>", updateCount)
-   w.grid(row=1, column=0, columnspan=2)
+   w.bind("<ButtonRelease-1>", lambda event: updateCount(image_label, list))
+   w.grid(row=1, column=0, columnspan=4)
 
    # pause button
    pauseButton = Button(master=root, text="Pause", command=pauseVideo)
@@ -125,8 +140,16 @@ if __name__ == '__main__':
    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
    playButton.grid(row=2, column=1)
    
+   #slow down
+   slowButton = Button(master=root, text='Slow Down', command=slowDown)
+   slowButton.grid(row=2, column=2)
+   
+   #fast forward
+   fastButton = Button(master=root, text='Fast Forward', command=fastForward)
+   fastButton.grid(row=2, column=3)
+   
    instruction = Label(master=root, text="Click on the center of the circle")
-   instruction.grid(row=3, column=0, columnspan=2)
+   instruction.grid(row=3, column=0, columnspan=3)
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, list))
    print 'finished video'
@@ -451,6 +474,14 @@ while(True):
     #cv2.imshow('frame', frame)
     
     
+    if center and not outside:
+        cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
+    
+    #show frames
+    cv2.imshow('Instructions',img)
+    cv2.imshow('frame', frame)
+    
+    
     """Plots motion in matplotlib"""
     if plot:
         
@@ -576,7 +607,7 @@ mainloop()
 cap.release()
 cv2.destroyAllWindows()
 
-
+plt.clf()
 """Plots motion in matplotlib"""
 xCoords = []
 yCoords = []
@@ -601,6 +632,8 @@ plt.subplot(212)
 plt.plot(tCoords,yCoords,'ro')
 plt.xlabel('Frame')
 plt.ylabel('y-pixel')
+
+"""attempt at data smoothing"""
 """plt.figure(2)
 plt.subplot(211)
 plt.plot(tCoords,rCoords,'r--')"""
