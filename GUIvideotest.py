@@ -10,7 +10,6 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2.cv as cv
 from PIL import Image, ImageTk
-import time
 import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
