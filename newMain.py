@@ -239,7 +239,7 @@ tracker = CircleTracker(cap)
 """VIDEO CONTROL VARIABLES AND DATA VARIABLES"""
 plot = False
 plt.ion()
-
+"""
 cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,tracker.length,onChanged)
@@ -252,7 +252,7 @@ cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,tracker.height+75)
 img = extra.feedback("Please click on the center of the circle",tracker.pause)
 cv2.imshow('Instructions',img)
-
+"""
 foundR = False
 dCoords = []
 size_pixel = 0

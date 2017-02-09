@@ -336,14 +336,7 @@ def findCircles(frame):
 """BEGINNING OF THE CODE"""
 
     
-"""GET FRAMES PER SECOND OF VIDEO"""
-"""while True:
-    try:
-        fps = int(raw_input("How many frames per second does the video have? "))
-        break
-    except:
-        print "Please enter an Integer value"
-"""        
+        
 video = tempdir
 
 #video data
