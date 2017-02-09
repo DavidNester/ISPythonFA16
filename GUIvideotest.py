@@ -336,7 +336,7 @@ def findCircles(frame):
 """BEGINNING OF THE CODE"""
 
     
-        
+
 video = tempdir
 
 #video data

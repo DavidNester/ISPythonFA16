@@ -10,20 +10,26 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2.cv as cv
 from PIL import Image, ImageTk
-import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
 #object tracking
 from collections import deque
 import argparse
 import imutils
+
 import matplotlib
-from circleTracker import CircleTracker
+#from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
+from circleTracker import CircleTracker
 
 global size, r_pixel, f, a, count, w
 count = 1
 size = 0
+speed = 0
 
 def submitData():
     global size, fps
@@ -55,8 +61,12 @@ def update_image(image_label, list, count):
 pause = True
 
 def update_all(root, image_label, list):
-   global count
-   if pause == False and count+1 < len(list):
+    global count, speed
+    if speed < 0:
+        time.sleep((speed*.1)*-1)
+    elif speed > 0:
+        count = count + (1*speed)
+    if pause == False and count+1 < len(list):
        count += 1
        w.set(count)
        update_image(image_label, list, count)
@@ -84,11 +94,21 @@ def pauseVideo():
     global pause
     pause = True
     
-def updateCount(self):
+def updateCount(image_label, list):
     global count
     count = w.get()
-    
-    
+    update_image(image_label, list, count)
+
+def slowDown():
+    global speed
+    speed -= 1
+
+def fastForward():
+    global speed
+    speed += 1
+
+
+
 if __name__ == '__main__':
    list = list()
    root = Tk()
@@ -117,6 +137,14 @@ if __name__ == '__main__':
    #play button
    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
    playButton.grid(row=2, column=1)
+   
+   #slow down
+   slowButton = Button(master=root, text='Slow Down', command=slowDown)
+   slowButton.grid(row=2, column=2)
+   
+   #fast forward
+   fastButton = Button(master=root, text='Fast Forward', command=fastForward)
+   fastButton.grid(row=2, column=3)
    
    instruction = Label(master=root, text="Click on the center of the circle")
    instruction.grid(row=3, column=0, columnspan=2)
