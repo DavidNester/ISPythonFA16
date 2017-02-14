@@ -52,21 +52,6 @@ def quit_(root):
    root.destroy()
    
 def update_image(image_label, list, count):
-   global circleCoords
-   if currentFrame in circleCoords.keys():
-        x,y,r = circleCoords[count]
-        
-        # draw the circle in the output image, then draw a rectangle
-        # corresponding to the center of the circle
-        #cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-        #cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-    
-    #find new circles if new frame and not paused
-   else:
-        if not pause:
-            circles = findCircles(list[count])
-            print circles
-   
    frame = list[count]
    im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
@@ -384,18 +369,16 @@ cv2.namedWindow('frame')
 #create trackbar with length = to the number of frames, linked to onChanged function
 cv2.createTrackbar('Frames','frame',0,length,onChanged)
 cv2.setMouseCallback('frame', on_mouse)
-"""
 circleCoords = {} #all the (x,y,r) data for all of the circles
 #used for predicting location of next circle if one is not found for a while based on previous activity
 lastFrameWithCircle = 0
 
-"""
 cv2.moveWindow('frame',0,0)
 
 cv2.namedWindow('Instructions')
 cv2.moveWindow('Instructions',0,height+75)
 img = extra.feedback("Please click on the center of the circle",pause)
-cv2.imshow('Instructions',img)
+#cv2.imshow('Instructions',img)
 """
 
 foundR = False
@@ -426,6 +409,7 @@ background = fig.canvas.copy_from_bbox(ax.bbox)
 while(True):
     #advance frame
     advance()
+    
     """BUTTON COMMANDS"""
     #get button press
     key = cv2.waitKey(1) & 0xFF
@@ -461,12 +445,7 @@ while(True):
     #get frame
     cap.set(1,currentFrame)
     ret, frame = cap.read()
-    
-    cv2.imshow('frame', frame)
-    cv2.createTrackbar('Frames','frame',0,length,onChanged)
-    """
     cv2.imshow('test', frame)
-    """
     #frame = extra.process(frame,height,width,fps,cap)
     
     
@@ -499,10 +478,9 @@ while(True):
         cv2.rectangle(frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
     
     #show frames
-    """
     cv2.imshow('Instructions',img)
     cv2.imshow('frame', frame)
-    """
+    
     
     """Plots motion in matplotlib"""
     if plot:
@@ -533,8 +511,6 @@ while(True):
        #plt.subplot(213)
        #plt.plot(tCoords,rCoords, 'ro')
        plot = False
-    
-       print xCoords
        xdistance_cm = round(((max(xCoords) - min(xCoords)) / size_pixel),2)
        xdistance_in = round((xdistance_cm/ 2.54),2)  
        
@@ -558,7 +534,7 @@ while(True):
         
         xCoords += [x]
         tCoords += [lastFrameWithCircle]
-        plt.plot(tCoords,yCoords,'ro')
+        plt.plot(tCoords,xCoords,'ro')
         
         plot = False
     
