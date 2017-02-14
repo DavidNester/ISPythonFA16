@@ -10,7 +10,6 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2.cv as cv
 from PIL import Image, ImageTk
-import time
 import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
@@ -352,14 +351,7 @@ def findCircles(frame):
 """BEGINNING OF THE CODE"""
 
     
-"""GET FRAMES PER SECOND OF VIDEO"""
-"""while True:
-    try:
-        fps = int(raw_input("How many frames per second does the video have? "))
-        break
-    except:
-        print "Please enter an Integer value"
-"""        
+
 video = tempdir
 
 #video data
