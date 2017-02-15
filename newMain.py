@@ -20,6 +20,7 @@ import imutils
 import matplotlib
 #from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -31,6 +32,8 @@ count = 1
 size = 0
 speed = 0
 
+
+
 def submitData():
     global size, fps
     size = float(e1.get())
@@ -38,12 +41,13 @@ def submitData():
 
 """INPUT FILE"""
 root = Tk()
+print root.tk.call('info', 'patchlevel')
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV")
                                                          ,("HTML files", "*.html;*.htm")
                                                          ,("All files", "*.*"))) #requests file name and type of files
-root.destroy()
+#root.destroy()
 
 #tkinter GUI functions----------------------------------------------------------
 def quit_(root):
@@ -111,7 +115,7 @@ def fastForward():
 
 if __name__ == '__main__':
    list = list()
-   root = Tk()
+   #root = Tk()
    image_label = Label(master=root)# label for the video frame
    image_label.grid(row=0, column=0, columnspan=2)
    p = image_capture(list)
@@ -302,7 +306,7 @@ while(True):
     """BUTTON COMMANDS"""
     #get button press
     key = cv2.waitKey(1) & 0xFF
-    print key
+
     if key == ord('p'):#pause
         if tracker.pause:
             tracker.pause = False
@@ -354,7 +358,7 @@ while(True):
         cv2.rectangle(tracker.frame, (center[0] - 5, center[1] - 5), (center[0] + 5, center[1] + 5), (0, 128, 255), -1)
     
     #show frames
-    cv2.imshow('Instructions',img)
+    #cv2.imshow('Instructions',img)
     cv2.imshow('frame', tracker.frame)
     
     

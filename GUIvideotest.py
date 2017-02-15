@@ -10,7 +10,6 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2.cv as cv
 from PIL import Image, ImageTk
-import matplotlib.pyplot as plt
 import extra
 from scipy.interpolate import interp1d
 #object tracking
@@ -19,9 +18,10 @@ import argparse
 import imutils
 
 import matplotlib
-from skimage.io._plugins.qt_plugin import ImageLabel
+#from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
 
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 
