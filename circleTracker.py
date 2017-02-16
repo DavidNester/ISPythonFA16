@@ -10,21 +10,21 @@ class CircleTracker:
         self.width = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self.length = int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         #instance variables
-        self.frame = None
-        self.currentFrame = 1
+        #self.frame = None
+        #self.currentFrame = 1
         self.lastFrameWithCircle = 0
-        self.finalFrame = False
-        self.speed = 0
-        self.pause = True
+        #self.finalFrame = False
+        #self.speed = 0
+        #self.pause = True
         self.circleCoords = {}
         self.xCoords = []
         self.yCoords = []
         self.rCoords = []
         self.tCoords = []
-        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        #self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.plot = False
-        self.first = None
-        
+        #self.first = None
+    """
     def updateFrame(self,newFrame):
         self.frame = newFrame
     def advance(self):
@@ -45,6 +45,7 @@ class CircleTracker:
                     time.sleep(.1)
                 if self.currentFrame + 1 < self.length:
                     self.currentFrame += 1
+    """
     
     def normal(self,x,y,r):
         #accept data if we hae no prior knowledge
@@ -57,7 +58,7 @@ class CircleTracker:
         return False
     
     def findCircles(self):
-        #need to add self.
+        #need to return circles that need to be drawn or return frame
         image = self.processImage()
         
         found = False
@@ -91,7 +92,7 @@ class CircleTracker:
                 self.pause = True
                 #img = extra.feedback("Please click on the center of the circle",pause)
 
-    
+    """
     def processImage(self):
         original = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
         retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
@@ -99,7 +100,10 @@ class CircleTracker:
         image = cv2.dilate(image, el, iterations=4)
         image = cv2.GaussianBlur(image, (13, 13), 0)
         return image
+    """
     
+    
+    """For The End"""
     def plot(self):
         plt.figure(1)
         plt.subplot(211)

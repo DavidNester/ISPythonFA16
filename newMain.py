@@ -329,7 +329,7 @@ while(True):
         if tracker.pause:
             center = None
             outside = None
-            img = extra.feedback("Please click on the center of the circle",tracker.pause)
+            #img = extra.feedback("Please click on the center of the circle",tracker.pause)
         
 
     #get frame

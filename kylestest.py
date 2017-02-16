@@ -10,20 +10,16 @@ from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2.cv as cv
 from PIL import Image, ImageTk
-import time
-import matplotlib.pyplot as plt
-import extra
 from scipy.interpolate import interp1d
 #object tracking
 from collections import deque
 import argparse
 import imutils
-
 import matplotlib
 from skimage.io._plugins.qt_plugin import ImageLabel
-from alembic.command import current
+#from alembic.command import current
 matplotlib.use("TkAgg")
-
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 
@@ -49,32 +45,25 @@ xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
 center = None
+outside = None
 first = None
 bottom = ''
 frame = ''
 xCoords = []
 tCoords = []
-
+pause = True
 
 """INPUT FILE"""
 root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
-tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm")
-                                                        ,("Movie files", "*.MOV")
-                                                         ,("All files", "*.*"))) #requests file name and type of files
+tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
 root.destroy()
-print tempdir
-"""Creating windows"""
-#tkinter GUI functions----------------------------------------------------------
-def quit_(root):
-   root.destroy()
- 
- 
+
 """checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
     global circleCoords,lastFrameWithCircle,currentFrame
-    #accept data if we hae no prior knowledge
+    #accept data if we have no prior knowledge
     if lastFrameWithCircle == 0:
         return True
     oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
@@ -85,7 +74,7 @@ def normal(x,y,r):
 
 """given a frame it finds the circle and returns the frame with the circle drawn on it"""
 def findCircles(frame):
-    global lastFrameWithCircle,pause,img
+    global lastFrameWithCircle,pause
     original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
     retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
     
@@ -125,8 +114,19 @@ def findCircles(frame):
     #if we havent found a circle in more than 10 frames then ask the user for help
     if currentFrame-lastFrameWithCircle > 10:
         pause = True
-        img = extra.feedback("Please click on the center of the circle",pause)
     return frame
+
+"""distance between two coordinates"""
+def distance(p1,p2):
+    dx = (p1[0]-p2[0])*1.0
+    dy = (p1[1]-p2[1])*1.0
+    return int((dx**2 + dy**2)**.5)
+
+"""Creating windows"""
+#tkinter GUI functions----------------------------------------------------------
+def quit_(root):
+    root.destroy()
+
   
 def update_image(image_label, list, count):
    global circleCoords, pause, plot, size, xAxis, yAxis,canvas, foundR, size_pixel, frame
@@ -170,27 +170,6 @@ def update_image(image_label, list, count):
       yAxis.plot(tCoords,yCoords,'ro')
       
       canvas.draw()
-      
-   
-   """if plot and first is not None:
-        
-       x,y,r = circleCoords[lastFrameWithCircle]
-        
-       Attempt at making plotting work on mac
-       
-       points.set_data(lastFrameWithCircle,x)
-       # restore background
-       fig.canvas.restore_region(background)
-       # redraw just the points
-       ax.draw_artist(points)
-       # fill in the axes rectangle
-       fig.canvas.blit(ax.bbox)
-        
-       xCoords += [x]
-       tCoords += [lastFrameWithCircle]
-       plt.plot(tCoords,xCoords,'ro')
-        
-       plot = False"""
    
    im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
@@ -199,15 +178,12 @@ def update_image(image_label, list, count):
    image_label._image_cache = b  # avoid garbage collection
    root.update()
 
-pause = True
-
 def update_all(root, image_label, list):
    global count, speed, bottom
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
        count = count + (1*speed)
-    
    if pause == False and count+1 < len(list):
        count += 1
        w.set(count)
@@ -226,21 +202,14 @@ def image_capture(list):
          if flag==0:
              break
          list.append(frame)
-         
       except:
          continue
-
-"""distance between two coordinates"""
-def distance(p1,p2):
-    dx = (p1[0]-p2[0])*1.0
-    dy = (p1[1]-p2[1])*1.0
-    return int((dx**2 + dy**2)**.5)
 
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
     #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,img,first,points,ax,plot, frame, list, count
+    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,length,height,width,fps,cap,first,points,ax,plot, frame, list, count
     #get only left mouse click
     x=event.x
     y=event.y
@@ -272,7 +241,6 @@ def on_mouse(event):
             #return to normal state
             pause = False
             center = outside = None
-            img = extra.clear(pause)
         #if first click (center)
         else:
             center = (x,y)
@@ -370,200 +338,6 @@ if __name__ == '__main__':
    root.after_idle(root.attributes,'-topmost',False)
    mainloop()
 
-""""""
-#used for mouse input from user
-center = None
-outside = None
-            
-
-def gamma_correction(img, correction):
-    img = img/255.0
-    img = cv2.pow(img, correction)
-    return np.uint8(img*255)
-
-"""
-Function called when track bar is moved
-updates currentFrame and lastFrameWithCircle
-"""
-def onChanged(x):
-    global currentFrame,finalFrame,lastFrameWithCircle, circleCoords
-    finalFrame = False
-    currentFrame = x
-    if lastFrameWithCircle != 0:
-        #lastFrameWith circle is highest frame in record that is less than the new currentFrame
-        lastFrameWithCircle = max([i for i in circleCoords.keys() if i < currentFrame])
-
-
-"""advances current frame and considers pause and speed"""  
-def advance():
-    global finalFrame,currentFrame,pause,plot
-    #only advance if video is not paused or at the end
-    if not pause and not finalFrame:
-        plot = True
-        if speed == 0:
-            if currentFrame + 1 < length:
-                currentFrame += 1
-        #if sped up then skip frames
-        elif speed > 0:
-            if currentFrame + speed**2 < length:
-                currentFrame += speed**2
-        #if slowed down then pause before giving next frame
-        elif speed < 0:
-            for i in range(speed**2):
-                time.sleep(.1)
-            if currentFrame + 1 < length:
-                currentFrame += 1
-
-
-
-"""given a frame it finds the circle and returns the frame with the circle drawn on it"""
-
-
-"""BEGINNING OF THE CODE"""
-
-    
-"""GET FRAMES PER SECOND OF VIDEO"""
-"""while True:
-    try:
-        fps = int(raw_input("How many frames per second does the video have? "))
-        break
-    except:
-        print "Please enter an Integer value"
-"""        
-video = tempdir
-
-#video data
-cap = cv2.VideoCapture(video)
-font = cv2.FONT_HERSHEY_SIMPLEX
-height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
-
-"""VIDEO CONTROL VARIABLES AND DATA VARIABLES"""
-currentFrame = 1
-speed = 0
-finalFrame = False
-pause = True #video starts paused
-plot = False
-first = None
-plt.ion()
-
-"""
-cv2.namedWindow('frame')
-#create trackbar with length = to the number of frames, linked to onChanged function
-cv2.createTrackbar('Frames','frame',0,length,onChanged)
-cv2.setMouseCallback('frame', on_mouse)
-circleCoords = {} #all the (x,y,r) data for all of the circles
-#used for predicting location of next circle if one is not found for a while based on previous activity
-lastFrameWithCircle = 0
-
-cv2.moveWindow('frame',0,0)
-
-cv2.namedWindow('Instructions')
-cv2.moveWindow('Instructions',0,height+75)
-img = extra.feedback("Please click on the center of the circle",pause)
-#cv2.imshow('Instructions',img)
-"""
-
-
-"""
-plt.show(False)
-plt.draw()
-background = fig.canvas.copy_from_bbox(ax.bbox)
-"""     
-"""LOOP FOR DISPLAYING VIDEO"""
-while(True):
-    #advance frame
-    advance()
-    
-    """BUTTON COMMANDS"""
-    #get button press
-    key = cv2.waitKey(1) & 0xFF
-    
-    if key == ord('p'):#pause
-        if pause:
-            pause = False
-        else:
-            pause = True
-        img = extra.feedback("",pause)
-    if key == ord('q'):#quit
-        break
-    if key == ord('w'):#slower
-        if speed > -3:
-            speed -= 1
-    if key == ord('e'):#faster
-        if speed < 3:
-            speed += 1
-    """not really used anymore"""
-    #if key == ord('t'):#drawing options
-    #   window.show()
-    if key == 3: #right arrow
-        currentFrame += 1
-    if key == 2: #left arrow
-        currentFrame -= 1
-    if key == 127: #delete key -> get rid of mouse input
-        if pause:
-            center = None
-            outside = None
-            img = extra.feedback("Please click on the center of the circle",pause)
-        
-
-    #get frame
-    
-    
-
-
-"""
-    #COLOR DETECTION
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-v", "--video",
-    help="path to the (optional) video file")
-    ap.add_argument("-b", "--buffer", type=int, default=64,
-    help="max buffer size")
-    args = vars(ap.parse_args())
-    pts = deque(maxlen=args["buffer"])
-    dst = gamma_correction(frame, 0.40)
-    
-    # define range of red color in HSV
-    lower_red = np.array([40, 90, 120])
-    upper_red = np.array([90, 255, 255])
-    # Threshold the HSV image to get only red colors
-    mask = cv2.inRange(dst, lower_red, upper_red)
-    mask = cv2.erode(mask, None, iterations=2)
-    mask = cv2.dilate(mask, None, iterations=2)
-    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE)[-2]
-    center = None
-    # only proceed if at least one contour was found
-    if len(cnts) > 0:
-        # find the largest contour in the mask, then use
-        # it to compute the minimum enclosing circle and
-        # centroid
-        c = max(cnts, key=cv2.contourArea)
-        ((x, y), radius) = cv2.minEnclosingCircle(c)
-        M = cv2.moments(c)
-        center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-           
-        # only proceed if the radius meets a minimum size
-        if int(x)<544 and int(x)>45:
-            count+=1
-            # draw the circle and centroid on the frame,
-            # then update the list of tracked points
-            cv2.circle(frame, (int(x), int(y)), int(radius),
-                       (0, 255, 255), 2)
-            cv2.circle(frame, center, 5, (0, 0, 255), -1)
-            print count, "-", int(x) , int(y)
-             
-    # update the points queue
-    pts.appendleft(center)
-                
-    # Bitwise-AND mask and original image
-    res = cv2.bitwise_and(frame,frame, mask= mask)
-    cv2.imshow('hsv', dst)
-    cv2.imshow('mask',mask)
-"""
-    
 
 master = Tk()
 resultx = StringVar()
@@ -580,4 +354,3 @@ mainloop()
 #end video viewing
 cap.release()
 cv2.destroyAllWindows()
-
