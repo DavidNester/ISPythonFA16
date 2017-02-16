@@ -16,12 +16,13 @@ from collections import deque
 import argparse
 import imutils
 import matplotlib
+from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 
-from circleTracker import circleTracker
+from circleTracker import CircleTracker
 
 global size, r_pixel, f, a, count, w
 count = 1
@@ -50,14 +51,14 @@ bottom = ''
 frame = ''
 pause = True
 
-tracker = circleTracker()
+tracker = CircleTracker()
 
 """INPUT FILE"""
 root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
-root.destroy()
+#root.destroy()
 
 """distance between two coordinates"""
 def distance(p1,p2):

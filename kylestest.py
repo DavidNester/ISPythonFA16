@@ -15,6 +15,7 @@ from scipy.interpolate import interp1d
 from collections import deque
 import argparse
 import imutils
+from skimage.io._plugins.qt_plugin import ImageLabel
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
