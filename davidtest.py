@@ -16,7 +16,7 @@ from collections import deque
 import argparse
 import imutils
 import matplotlib
-from skimage.io._plugins.qt_plugin import ImageLabel
+#from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -58,7 +58,6 @@ root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
-#root.destroy()
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -84,7 +83,7 @@ def update_image(image_label, list, count):
    #find new circles if new frame and not paused
    else:
        if not pause:
-           frame = tracker.findCircles(frame)
+           frame = tracker.findCircles(frame,currentFrame,pause)
             
   
     
@@ -97,8 +96,8 @@ def update_image(image_label, list, count):
       tCoords = [] 
         
       #get all frames,x,y,r and store each in their own array
-      for frame in tracker.circleCoords.keys():
-          x,y,r = tracker.circleCoords[frame]
+      for fr in tracker.circleCoords.keys():
+          x,y,r = tracker.circleCoords[fr]
           xCoords += [x]
           yCoords += [y]
           rCoords += [r]
@@ -221,7 +220,7 @@ def submitData():
     
 if __name__ == '__main__':
    list = list()
-   root = Tk()
+   root = Toplevel()
    root.wm_title("Object Tracker")
    
    image_label = Label(master=root)# label for the video frame

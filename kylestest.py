@@ -15,7 +15,7 @@ from scipy.interpolate import interp1d
 from collections import deque
 import argparse
 import imutils
-from skimage.io._plugins.qt_plugin import ImageLabel
+#from skimage.io._plugins.qt_plugin import ImageLabel
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -55,7 +55,7 @@ root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
-root.destroy()
+#root.destroy()
 
 """checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
@@ -274,7 +274,8 @@ def submitData():
     
 if __name__ == '__main__':
    list = list()
-   root = Tk()
+   #root = Tk()
+   root = Toplevel()
    root.wm_title("Object Tracker")
    
    image_label = Label(master=root)# label for the video frame
