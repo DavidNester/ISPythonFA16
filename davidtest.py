@@ -21,15 +21,16 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 
+from circleTracker import circleTracker
+
 global size, r_pixel, f, a, count, w
 count = 1
 size = 120
 speed = 0
-circleCoords = {} #all the (x,y,r) data for all of the circles
 plot = True
-lastFrameWithCircle = 0
 currentFrame = 0
 foundR = False
+#may move to circle tracker
 xCoords = []
 yCoords = []
 rCoords = []
@@ -49,68 +50,14 @@ bottom = ''
 frame = ''
 pause = True
 
+tracker = circleTracker()
+
 """INPUT FILE"""
 root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
 root.destroy()
-
-"""checks to see if a circle is in a reasonable place based on the previous circles"""
-def normal(x,y,r):
-    global circleCoords,lastFrameWithCircle,currentFrame
-    #accept data if we have no prior knowledge
-    if lastFrameWithCircle == 0:
-        return True
-    oldX,oldY,oldR = circleCoords[lastFrameWithCircle]
-    #make sure that the new circle agrees with the old circle
-    if abs(oldX-x) < oldR/2 and abs(oldY-y) < oldR/2 and abs(r-oldR) < oldR/2:
-        return True
-    return False
-
-"""given a frame it finds the circle and returns the frame with the circle drawn on it"""
-def findCircles(frame):
-    global lastFrameWithCircle,pause
-    original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale   
-    retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)
-    
-    el = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    image = cv2.dilate(image, el, iterations=4)
-    
-    
-    image = cv2.GaussianBlur(image, (13, 13), 0)
-    
-    found = False
-    alpha = 90
-    while not found:
-        circles = cv2.HoughCircles(image, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100, param2 = alpha) #find circles 
-        if circles is not None:
-            # convert the (x, y) coordinates and radius of the circles to integers
-            circles = np.round(circles[0, :]).astype("int")
-            #check if the circles agree with previous data
-            for x,y,r in circles:
-                if normal(x,y,r):
-                    found = True
-                    circleCoords[currentFrame] = (x,y,r)
-                    # draw the circle in the output image, then draw a rectangle
-                    # corresponding to the center of the circle
-                    cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-                    cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                    
-                    lastFrameWithCircle = currentFrame
-            if not found:
-                alpha -= 5
-                if alpha <= 30:
-                    found = True
-        else:
-            #if no circles found then try again with new threshold (threshold stops at 30)
-            alpha -= 5
-            if alpha <= 30:
-                found = True
-    #if we havent found a circle in more than 10 frames then ask the user for help
-    if currentFrame-lastFrameWithCircle > 10:
-        pause = True
-    return frame
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -125,32 +72,32 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global circleCoords, pause, plot, size, xAxis, yAxis,canvas, foundR, size_pixel, frame
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, foundR, size_pixel, frame
    frame = list[count]
    currentFrame = count
    
    #if we already have the frame in memory then use circles that were found
-   if currentFrame in circleCoords.keys():
-       x,y,r = circleCoords[currentFrame]
+   if currentFrame in tracker.circleCoords.keys():
+       x,y,r = tracker.circleCoords[currentFrame]
    
    #find new circles if new frame and not paused
    else:
        if not pause:
-           frame = findCircles(frame)
+           frame = tracker.findCircles(frame)
             
   
     
    """Plots motion in matplotlib"""
    if plot:
-        
+       #possibly change this so it is in circleTracker
       xCoords = []
       yCoords = []
       rCoords = []
       tCoords = [] 
         
       #get all frames,x,y,r and store each in their own array
-      for frame in circleCoords.keys():
-          x,y,r = circleCoords[frame]
+      for frame in tracker.circleCoords.keys():
+          x,y,r = tracker.circleCoords[frame]
           xCoords += [x]
           yCoords += [y]
           rCoords += [r]
@@ -205,7 +152,7 @@ def image_capture(list):
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
     #global rect,startPoint,endPoint
-    global center,outside,currentFrame,circleCoords,lastFrameWithCircle,pause,fps,first,points,ax,plot, frame, list, count
+    global center,outside,currentFrame,tracker,pause,fps,cap,first,points,ax,plot, frame, list, count
     #get only left mouse click
     x=event.x
     y=event.y
@@ -220,15 +167,15 @@ def on_mouse(event):
                 first = (center[0],center[1],distance(center,outside),currentFrame)
                 #points = ax.plot(currentFrame,center[0],'ro')[0]
                 plot = True
-        
+            
+            
             x,y = center
             r = distance(center,outside)
-            circleCoords[currentFrame] = (x,y,r)
+            tracker.circleCoords[currentFrame] = (x,y,r)
             
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            lastFrameWithCircle = currentFrame
-            #cv2.imshow('frame', frame)
+            tracker.lastFrameWithCircle = currentFrame
             
             #return to normal state
             pause = False
