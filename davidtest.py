@@ -29,7 +29,7 @@ count = 1
 size = 120
 speed = 0
 plot = True
-currentFrame = 0
+#currentFrame = 0
 foundR = False
 #may move to circle tracker
 xCoords = []
@@ -74,17 +74,20 @@ def quit_(root):
 def update_image(image_label, list, count):
    global tracker, pause, plot, size, xAxis, yAxis,canvas, foundR, size_pixel, frame
    frame = list[count]
-   currentFrame = count
+   #currentFrame = count
    
    #if we already have the frame in memory then use circles that were found
-   if currentFrame in tracker.circleCoords.keys():
-       x,y,r = tracker.circleCoords[currentFrame]
+   if count in tracker.circleCoords.keys():
+       x,y,r = tracker.circleCoords[count]
    
    #find new circles if new frame and not paused
    else:
-       if not pause:
-           frame = tracker.findCircles(frame,currentFrame,pause)
-            
+      if not pause:
+         frame,pause = tracker.findCircles(frame,count,pause)
+         if pause:
+            pauseVideo()
+    
+    
   
     
    """Plots motion in matplotlib"""
@@ -101,7 +104,7 @@ def update_image(image_label, list, count):
           xCoords += [x]
           yCoords += [y]
           rCoords += [r]
-          tCoords += [count]
+          tCoords += [fr]
           
           if foundR == False:
               r_pixel = r
@@ -164,27 +167,25 @@ def on_mouse(event):
         if center is not None:
             outside = (x,y)
             if first is None:
-                first = (center[0],center[1],distance(center,outside),currentFrame)
-                #points = ax.plot(currentFrame,center[0],'ro')[0]
+                first = (center[0],center[1],distance(center,outside),count)
                 plot = True
             
             
             x,y = center
             r = distance(center,outside)
-            tracker.circleCoords[currentFrame] = (x,y,r)
-            
+            tracker.circleCoords[count] = (x,y,r)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            tracker.lastFrameWithCircle = currentFrame
-            
+            tracker.lastFrameWithCircle = count
             #return to normal state
-            pause = False
+            playVideo(root,image_label,list)
             center = outside = None
+            bottom.config(text='')
         #if first click (center)
         else:
             center = (x,y)
             cv2.rectangle(list[count-1], (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            bottom.config(text='Click the outside')
+            bottom.config(text='Click on the outside of the circle')
                  
 def playVideo(root, image_label, list):
     global pause
@@ -214,7 +215,7 @@ def submitData():
     information.destroy()
     input.destroy()
     submit.destroy()
-    bottom = Label(master=root, text="Click on the middle")
+    bottom = Label(master=root, text="Click on the center of the circle")
     bottom.grid(row=3, column=0, columnspan=4)
  
     
@@ -256,7 +257,7 @@ if __name__ == '__main__':
    slowButton.grid(row=2, column=2)
    
    #fast forward
-   fastButton = Button(master=root, text='Fast Forward', command=fastForward)
+   fastButton = Button(master=root, text='Speed Up', command=fastForward)
    fastButton.grid(row=2, column=3)
    
    information = Label(master=root, text="Enter the size of the object (cm): ")

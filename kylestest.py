@@ -55,7 +55,6 @@ root = Tk()
 root.withdraw() #use to hide tkinter window
 currdir = os.getcwd() #sets current directory
 tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
-#root.destroy()
 
 """checks to see if a circle is in a reasonable place based on the previous circles"""
 def normal(x,y,r):
@@ -150,8 +149,8 @@ def update_image(image_label, list, count):
       tCoords = [] 
         
       #get all frames,x,y,r and store each in their own array
-      for frame in circleCoords.keys():
-          x,y,r = circleCoords[frame]
+      for fr in circleCoords.keys():
+          x,y,r = circleCoords[fr]
           xCoords += [x]
           yCoords += [y]
           rCoords += [r]

@@ -21,7 +21,6 @@ class CircleTracker:
     
     def findCircles(self,frame,currentFrame, pause):
         image = self.processImage(frame)
-        
         found = False
         alpha = 90
         while not found:
@@ -48,10 +47,10 @@ class CircleTracker:
                 alpha -= 5
                 if alpha <= 30:
                     found = True
-            #if we havent found a circle in more than 10 frames then ask the user for help
-            if currentFrame-self.lastFrameWithCircle > 10:
+        #if we havent found a circle in more than 10 frames then ask the user for help
+        if currentFrame-self.lastFrameWithCircle > 10:
                 self.pause = True
-            return frame, pause
+        return frame, pause
 
     def processImage(self,frame):
         original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale
