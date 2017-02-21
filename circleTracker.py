@@ -8,6 +8,10 @@ class CircleTracker:
         #instance variables
         self.lastFrameWithCircle = 0
         self.circleCoords = {}
+        self.xCoords = []
+        self.yCoords = []
+        self.rCoords = []
+        self.tCoords = []
     
     def normal(self,x,y,r):
         #accept data if we hae no prior knowledge
@@ -33,6 +37,10 @@ class CircleTracker:
                     if self.normal(x,y,r):
                         found = True
                         self.circleCoords[currentFrame] = (x,y,r)
+                        self.xCoords += [x]
+                        self.yCoords += [y]
+                        self.rCoords += [r]
+                        self.tCoords += [currentFrame]
                         # draw the circle in the output image, then draw a rectangle
                         # corresponding to the center of the circle
                         cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
@@ -59,6 +67,19 @@ class CircleTracker:
         image = cv2.dilate(image, el, iterations=4)
         image = cv2.GaussianBlur(image, (13, 13), 0)
         return image
+    
+    
+    def getXCoords(self):
+       return self.xCoords
+    
+    def getYCoords(self):
+       return self.yCoords
+    
+    def getRCoords(self):
+       return self.rCoords
+
+    def getTCoords(self):
+       return self.tCoords
     
     
     """For The End"""

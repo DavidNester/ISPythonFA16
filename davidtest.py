@@ -30,13 +30,11 @@ size = 120
 speed = 0
 plot = True
 #currentFrame = 0
-foundR = False
 #may move to circle tracker
 xCoords = []
 yCoords = []
 rCoords = []
 tCoords = []
-dCoords = []
 size_pixel = 0
 r_pixel = 0
 fps = 123
@@ -72,7 +70,7 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, foundR, size_pixel, frame
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame
    frame = list[count]
    #currentFrame = count
    
@@ -93,23 +91,10 @@ def update_image(image_label, list, count):
    """Plots motion in matplotlib"""
    if plot:
        #possibly change this so it is in circleTracker
-      xCoords = []
-      yCoords = []
-      rCoords = []
-      tCoords = [] 
-        
-      #get all frames,x,y,r and store each in their own array
-      for fr in tracker.circleCoords.keys():
-          x,y,r = tracker.circleCoords[fr]
-          xCoords += [x]
-          yCoords += [y]
-          rCoords += [r]
-          tCoords += [fr]
-          
-          if foundR == False:
-              r_pixel = r
-              foundR=True
-              size_pixel = int(r_pixel)/size
+      xCoords = tracker.getXCoords()
+      yCoords = tracker.getYCoords()
+      rCoords = tracker.getRCoords()
+      tCoords = tracker.getTCoords()
               
       #plot the data
       xAxis.plot(tCoords,xCoords,'ro')
@@ -121,7 +106,7 @@ def update_image(image_label, list, count):
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
    image_label.configure(image=b)
-   image_label._image_cache = b  # avoid garbage collection
+   image_label._image_cache = b  #avoid garbage collection
    root.update()
 
 def update_all(root, image_label, list):
