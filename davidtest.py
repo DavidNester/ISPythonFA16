@@ -81,8 +81,9 @@ def update_image(image_label, list, count):
    #find new circles if new frame and not paused
    else:
       if not pause:
-         frame,pause = tracker.findCircles(frame,count,pause)
-         if pause:
+         frame,lost = tracker.findCircles(frame,count,pause)
+         if lost:
+            bottom.config(text='Circle is lost. Please click on the center')
             pauseVideo()
     
     
@@ -144,7 +145,6 @@ def on_mouse(event):
     #get only left mouse click
     x=event.x
     y=event.y
-    print x, y
     
     #only use if paused (paused when nothing is found)'
     if pause:
@@ -169,7 +169,7 @@ def on_mouse(event):
         #if first click (center)
         else:
             center = (x,y)
-            cv2.rectangle(list[count-1], (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+            cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             bottom.config(text='Click on the outside of the circle')
                  
 def playVideo(root, image_label, list):
@@ -193,6 +193,8 @@ def slowDown():
 def fastForward():
     global speed
     speed += 1
+def end():
+    quit_(root)
 
 def submitData():
     global size, bottom
@@ -200,7 +202,7 @@ def submitData():
     information.destroy()
     input.destroy()
     submit.destroy()
-    bottom = Label(master=root, text="Click on the center of the circle")
+    bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
     bottom.grid(row=3, column=0, columnspan=4)
  
     
@@ -254,9 +256,11 @@ if __name__ == '__main__':
    submit = Button(master=root, text='Submit', command=submitData)
    submit.grid(row=3, column=3)
    
+   end = Button(master=root, text='End', command=end)
+   end.grid(row = 4, column = 2, columnspan = 2)
+   
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, list))
-   print 'finished video'
    
    root.lift()
    root.attributes('-topmost',True)
