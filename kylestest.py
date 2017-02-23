@@ -50,6 +50,7 @@ bottom = ''
 frame = ''
 pause = True
 
+
 """INPUT FILE"""
 root = Tk()
 root.withdraw() #use to hide tkinter window
