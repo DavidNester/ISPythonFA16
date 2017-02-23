@@ -75,13 +75,13 @@ def update_image(image_label, list, count):
    #currentFrame = count
    
    #if we already have the frame in memory then use circles that were found
-   if count in tracker.circleCoords.keys():
-       x,y,r = tracker.circleCoords[count]
+   if count in tracker.coords.keys():
+       x,y,r = tracker.coords[count]
    
    #find new circles if new frame and not paused
    else:
       if not pause:
-         frame,lost = tracker.findCircles(frame,count,pause)
+         frame,lost = tracker.find(frame,count,pause)
          if lost:
             bottom.config(text='Circle is lost. Please click on the center')
             pauseVideo()
@@ -174,10 +174,10 @@ def on_mouse(event):
             
             x,y = center
             r = distance(center,outside)
-            tracker.circleCoords[count] = (x,y,r)
+            tracker.coords[count] = (x,y,r)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            tracker.lastFrameWithCircle = count
+            tracker.lastFrameWith = count
             #return to normal state
             playVideo(root,image_label,list)
             center = outside = None

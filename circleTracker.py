@@ -1,31 +1,12 @@
 import cv2
-import matplotlib
 import numpy as np
+from Tracker import Tracker
 
-class CircleTracker:
+class CircleTracker(Tracker):
 
-    def __init__(self):
-        #instance variables
-        self.lastFrameWithCircle = 0
-        self.circleCoords = {}
-        self.xCoords = []
-        self.yCoords = []
-        self.rCoords = []
-        self.tCoords = []
-    
-    def normal(self,x,y,r):
-        #accept data if we hae no prior knowledge
-        if self.lastFrameWithCircle == 0:
-            return True
-        oldX,oldY,oldR = self.circleCoords[self.lastFrameWithCircle]
-        #make sure that the new circle agrees with the old circle
-        if abs(oldX-x) < oldR/2 and abs(oldY-y) < oldR/2 and abs(r-oldR) < oldR/2:
-           return True
-        return False
-    
-    def findCircles(self,frame,currentFrame, pause):
+    def find(self,frame,currentFrame, pause):
         lost = False
-        if currentFrame-self.lastFrameWithCircle > 10:
+        if currentFrame-self.lastFrameWith > 10:
           lost = True
           return frame, lost
         image = self.processImage(frame)
@@ -40,7 +21,7 @@ class CircleTracker:
                 for x,y,r in circles:
                     if self.normal(x,y,r):
                         found = True
-                        self.circleCoords[currentFrame] = (x,y,r)
+                        self.coords[currentFrame] = (x,y,r)
                         self.xCoords += [x]
                         self.yCoords += [y]
                         self.rCoords += [r]
@@ -49,7 +30,7 @@ class CircleTracker:
                         # corresponding to the center of the circle
                         cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
                         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                        self.lastFrameWithCircle = currentFrame
+                        self.lastFrameWith = currentFrame
                 if not found:
                     alpha -= 5
                     if alpha <= 30:
@@ -60,7 +41,7 @@ class CircleTracker:
                 if alpha <= 30:
                     found = True
         #if we havent found a circle in more than 10 frames then ask the user for help
-        if currentFrame-self.lastFrameWithCircle > 10:
+        if currentFrame-self.lastFrameWith > 10:
                 lost = True
         return frame, lost
 
@@ -71,53 +52,3 @@ class CircleTracker:
         image = cv2.dilate(image, el, iterations=4)
         image = cv2.GaussianBlur(image, (13, 13), 0)
         return image
-    
-    
-    def getXCoords(self):
-       return self.xCoords
-    
-    def getYCoords(self):
-       return self.yCoords
-    
-    def getRCoords(self):
-       return self.rCoords
-
-    def getTCoords(self):
-       return self.tCoords
-    
-    
-    """For The End"""
-    def plot(self):
-        #need to add xcoords, tcoords, etc.
-        plt.figure(1)
-        plt.subplot(211)
-        plt.plot(tCoords,xCoords,'ro')
-        plt.xlabel('Frame')
-        plt.ylabel('x-pixel')
-        plt.subplot(212)
-        plt.plot(tCoords,yCoords,'ro')
-        plt.xlabel('Frame')
-        plt.ylabel('y-pixel')
-        """attempt at data smoothing"""
-        """plt.figure(2)
-        plt.subplot(211)
-        plt.plot(tCoords,rCoords,'r--')"""
-        """f = interp1d(tCoords,xCoords, kind = 'cubic')
-        plt.subplot(212)
-        xnew = np.linspace(0,max(tCoords),num = 2*len(tCoords),endpoint = True)
-        plt.plot(xnew,f(xCoords),'--')"""
-        plt.show()
-
-    def xMax():
-        return max(xCoords)
-
-    def xMin():
-        return min(xCoords)
-
-    def yMax():
-        return max(yCoords)
-      
-    def yMin():
-        return min(yCoords)
-
-
