@@ -70,7 +70,7 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f
    frame = list[count]
    #currentFrame = count
    
@@ -98,10 +98,18 @@ def update_image(image_label, list, count):
       tCoords = tracker.getTCoords()
               
       #plot the data
-      xAxis.plot(tCoords,xCoords,'ro')
-      yAxis.plot(tCoords,yCoords,'ro')
-      
-      canvas.draw()
+      xLine, = xAxis.plot(tCoords,xCoords,'ro')
+      yLine, = yAxis.plot(tCoords,yCoords,'ro')
+      #line.set_ydata(xCoords)
+      #line.set_xdata(tCoords)
+      xAxis.draw_artist(xAxis.patch)
+      xAxis.draw_artist(xLine)
+      #line.set_ydata(yCoords)
+      yAxis.draw_artist(yAxis.patch)
+      yAxis.draw_artist(yLine)
+      f.canvas.draw()
+      f.canvas.flush_events()
+      #canvas.draw()
    
    im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
@@ -193,8 +201,6 @@ def slowDown():
 def fastForward():
     global speed
     speed += 1
-def end():
-    quit_(root)
 
 def submitData():
     global size, bottom
@@ -256,8 +262,8 @@ if __name__ == '__main__':
    submit = Button(master=root, text='Submit', command=submitData)
    submit.grid(row=3, column=3)
    
-   end = Button(master=root, text='End', command=end)
-   end.grid(row = 4, column = 2, columnspan = 2)
+   """end = Button(master=root, text='End', command=quit_(root))
+   end.grid(row = 4, column = 3, columnspan = 2)"""
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, list))
