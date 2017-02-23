@@ -107,3 +107,17 @@ class CircleTracker:
         xnew = np.linspace(0,max(tCoords),num = 2*len(tCoords),endpoint = True)
         plt.plot(xnew,f(xCoords),'--')"""
         plt.show()
+
+    def xMax():
+        return max(xCoords)
+
+    def xMin():
+        return min(xCoords)
+
+    def yMax():
+        return max(yCoords)
+      
+    def yMin():
+        return min(yCoords)
+
+

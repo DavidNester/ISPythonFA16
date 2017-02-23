@@ -29,8 +29,6 @@ count = 1
 size = 120
 speed = 0
 plot = True
-#currentFrame = 0
-#may move to circle tracker
 xCoords = []
 yCoords = []
 rCoords = []
@@ -48,6 +46,8 @@ first = None
 bottom = ''
 frame = ''
 pause = True
+xLine = 0
+yLine = 0
 
 tracker = CircleTracker()
 
@@ -70,7 +70,7 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine
    frame = list[count]
    #currentFrame = count
    
@@ -96,15 +96,23 @@ def update_image(image_label, list, count):
       yCoords = tracker.getYCoords()
       rCoords = tracker.getRCoords()
       tCoords = tracker.getTCoords()
-              
+      
+      """
+      if foundR == False:
+         r_pixel = r
+         foundR=True
+         size_pixel = int(r_pixel)/size
+      """
+      
       #plot the data
       xLine, = xAxis.plot(tCoords,xCoords,'ro')
       yLine, = yAxis.plot(tCoords,yCoords,'ro')
-      #line.set_ydata(xCoords)
-      #line.set_xdata(tCoords)
+      xLine.set_ydata(xCoords)
+      xLine.set_xdata(tCoords)
       xAxis.draw_artist(xAxis.patch)
       xAxis.draw_artist(xLine)
-      #line.set_ydata(yCoords)
+      yLine.set_ydata(yCoords)
+      yLine.set_xdata(tCoords)
       yAxis.draw_artist(yAxis.patch)
       yAxis.draw_artist(yLine)
       f.canvas.draw()
@@ -225,7 +233,10 @@ if __name__ == '__main__':
    f = Figure(figsize=(10,5), dpi=100)
    xAxis = f.add_subplot(121)
    yAxis = f.add_subplot(122)
-   
+   xLine, = xAxis.plot(tCoords,xCoords,'ro')
+   yLine, = yAxis.plot(tCoords,yCoords,'ro')
+
+
    canvas = FigureCanvasTkAgg(f, master=root)
    canvas.show()
    canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
@@ -277,6 +288,9 @@ if __name__ == '__main__':
 master = Tk()
 resultx = StringVar()
 resulty = StringVar()
+xdistance_cm = tracker.xMax() - tracker.xMin()
+ydistance_cm = tracker.yMax() - tracker.yMin()
+
 response = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
 responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
 resultx.set(response)
