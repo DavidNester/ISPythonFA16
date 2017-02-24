@@ -35,6 +35,7 @@ speed = 0
 plot = False
 #currentFrame = 0
 #may move to circle tracker
+plot = True
 xCoords = []
 yCoords = []
 rCoords = []
@@ -56,6 +57,8 @@ first = None
 bottom = ''
 frame = ''
 pause = True
+xLine = 0
+yLine = 0
 
 tracker = CircleTracker()
 
@@ -78,18 +81,18 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine
    frame = list[count]
    #currentFrame = count
    
    #if we already have the frame in memory then use circles that were found
-   if count in tracker.circleCoords.keys():
-       x,y,r = tracker.circleCoords[count]
+   if count in tracker.coords.keys():
+       x,y,r = tracker.coords[count]
    
    #find new circles if new frame and not paused
    else:
       if not pause:
-         frame,lost = tracker.findCircles(frame,count,pause)
+         frame,lost = tracker.find(frame,count,pause)
          if lost:
             bottom.config(text='Circle is lost. Please click on the center')
             pauseVideo()
@@ -104,7 +107,14 @@ def update_image(image_label, list, count):
       yCoords = tracker.getYCoords()
       rCoords = tracker.getRCoords()
       tCoords = tracker.getTCoords()
-              
+      
+      """
+      if foundR == False:
+         r_pixel = r
+         foundR=True
+         size_pixel = int(r_pixel)/size
+      """
+      
       #plot the data
       if var.get() == 1 or var.get()==3:
           xLine, = xAxis.plot(tCoords,xCoords,'ro')
@@ -117,6 +127,16 @@ def update_image(image_label, list, count):
       #line.set_ydata(xCoords)
       #line.set_xdata(tCoords)
       #line.set_ydata(yCoords)
+      xLine, = xAxis.plot(tCoords,xCoords,'ro')
+      yLine, = yAxis.plot(tCoords,yCoords,'ro')
+      xLine.set_ydata(xCoords)
+      xLine.set_xdata(tCoords)
+      xAxis.draw_artist(xAxis.patch)
+      xAxis.draw_artist(xLine)
+      yLine.set_ydata(yCoords)
+      yLine.set_xdata(tCoords)
+      yAxis.draw_artist(yAxis.patch)
+      yAxis.draw_artist(yLine)
       f.canvas.draw()
       f.canvas.flush_events()
       #canvas.draw()
@@ -181,10 +201,10 @@ def on_mouse(event):
             
             x,y = center
             r = distance(center,outside)
-            tracker.circleCoords[count] = (x,y,r)
+            tracker.coords[count] = (x,y,r)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            tracker.lastFrameWithCircle = count
+            tracker.lastFrameWith = count
             #return to normal state
             playVideo(root,image_label,list)
             center = outside = None
@@ -274,6 +294,17 @@ if __name__ == '__main__':
    displayPlot = Button(master=holder, text="Plot", command=displayChoice)
    displayPlot.pack(side="top")
    holder.grid(row=0, column=4, rowspan=4)
+
+   f = Figure(figsize=(10,5), dpi=100)
+   xAxis = f.add_subplot(121)
+   yAxis = f.add_subplot(122)
+   xLine, = xAxis.plot(tCoords,xCoords,'ro')
+   yLine, = yAxis.plot(tCoords,yCoords,'ro')
+
+
+   canvas = FigureCanvasTkAgg(f, master=root)
+   canvas.show()
+   canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
    
    size = len(list)
    update_image(image_label, list, 0)
@@ -317,3 +348,19 @@ if __name__ == '__main__':
    root.attributes('-topmost',True)
    root.after_idle(root.attributes,'-topmost',False)
    mainloop()
+
+
+master = Tk()
+resultx = StringVar()
+resulty = StringVar()
+xdistance_cm = tracker.xMax() - tracker.xMin()
+ydistance_cm = tracker.yMax() - tracker.yMin()
+
+response = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
+responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
+resultx.set(response)
+resulty.set(responsey)
+Label(master, textvariable=resultx).grid(row=0)
+Label(master, textvariable=resulty).grid(row=1)
+
+mainloop()
