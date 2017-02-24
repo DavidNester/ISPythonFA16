@@ -16,6 +16,9 @@ from collections import deque
 import argparse
 import imutils
 import matplotlib
+from chaco.shell.commands import yaxis
+import xlsxwriter
+
 #from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -25,10 +28,11 @@ from matplotlib.figure import Figure
 from circleTracker import CircleTracker
 
 global size, r_pixel, f, a, count, w
+radio = 0
 count = 1
 size = 120
 speed = 0
-plot = True
+plot = False
 #currentFrame = 0
 #may move to circle tracker
 xCoords = []
@@ -37,6 +41,10 @@ rCoords = []
 tCoords = []
 size_pixel = 0
 r_pixel = 0
+var  = 0
+f = ""
+xAxis = ""
+yAxis = ""
 fps = 123
 xdistance_cm = 0
 xdistance_in = 0
@@ -98,15 +106,17 @@ def update_image(image_label, list, count):
       tCoords = tracker.getTCoords()
               
       #plot the data
-      xLine, = xAxis.plot(tCoords,xCoords,'ro')
-      yLine, = yAxis.plot(tCoords,yCoords,'ro')
+      if var.get() == 1 or var.get()==3:
+          xLine, = xAxis.plot(tCoords,xCoords,'ro')
+          xAxis.draw_artist(xAxis.patch)
+          xAxis.draw_artist(xLine)
+      if var.get() == 2 or var.get()==3:
+          yLine, = yAxis.plot(tCoords,yCoords,'ro')
+          yAxis.draw_artist(yAxis.patch)
+          yAxis.draw_artist(yLine)
       #line.set_ydata(xCoords)
       #line.set_xdata(tCoords)
-      xAxis.draw_artist(xAxis.patch)
-      xAxis.draw_artist(xLine)
       #line.set_ydata(yCoords)
-      yAxis.draw_artist(yAxis.patch)
-      yAxis.draw_artist(yLine)
       f.canvas.draw()
       f.canvas.flush_events()
       #canvas.draw()
@@ -131,6 +141,12 @@ def update_all(root, image_label, list):
        root.after(0, func=lambda: update_all(root, image_label, list))
    elif count+1 >= len(list):
        bottom.config(text='Total Distance')
+       workbook = xlsxwriter.Workbook('arrays.xlsx')
+       worksheet = workbook.add_worksheet()
+       for x in xCoords:
+           worksheet.writecolumn(x);
+       
+       worksheet.save()
        
 
 #multiprocessing image processing functions-------------------------------------
@@ -161,7 +177,6 @@ def on_mouse(event):
             outside = (x,y)
             if first is None:
                 first = (center[0],center[1],distance(center,outside),count)
-                plot = True
             
             
             x,y = center
@@ -210,6 +225,28 @@ def submitData():
     submit.destroy()
     bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
     bottom.grid(row=3, column=0, columnspan=4)
+    
+def displayChoice():
+    global plot, f, xAxis, yAxis
+    plot = True
+    xPlot.destroy()
+    yPlot.destroy()
+    bothPlot.destroy()
+    displayPlot.destroy()
+    f = Figure(figsize=(5,5), dpi=100)
+    
+    if var.get()==1:
+        xAxis = f.add_subplot(111)
+    elif var.get() == 2:
+        yAxis = f.add_subplot(111)
+    elif var.get() == 3:
+        f = Figure(figsize=(10,5), dpi=100)
+        xAxis = f.add_subplot(121)
+        yAxis = f.add_subplot(122)
+   
+    canvas = FigureCanvasTkAgg(f, master=root)
+    canvas.show()
+    canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
  
     
 if __name__ == '__main__':
@@ -217,18 +254,26 @@ if __name__ == '__main__':
    root = Toplevel()
    root.wm_title("Object Tracker")
    
+   
+   var = IntVar()
    image_label = Label(master=root)# label for the video frame
    image_label.grid(row=0, column=0, columnspan=4)
    p = image_capture(list)
    image_label.bind('<Button-1>',on_mouse)
    
-   f = Figure(figsize=(10,5), dpi=100)
-   xAxis = f.add_subplot(121)
-   yAxis = f.add_subplot(122)
+   holder = Frame(master=root)
+   xPlot = Radiobutton(master=holder, text="X Axis", variable=var, value=1)
+   xPlot.pack(side="top")
    
-   canvas = FigureCanvasTkAgg(f, master=root)
-   canvas.show()
-   canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
+   yPlot = Radiobutton(master=holder, text="Y Axis", variable=var, value=2)
+   yPlot.pack(side="top")
+   
+   bothPlot = Radiobutton(master=holder, text="Both Axis", variable=var, value=3)
+   bothPlot.pack(side="top")
+   
+   displayPlot = Button(master=holder, text="Plot", command=displayChoice)
+   displayPlot.pack(side="top")
+   holder.grid(row=0, column=4, rowspan=4)
    
    size = len(list)
    update_image(image_label, list, 0)
@@ -272,16 +317,3 @@ if __name__ == '__main__':
    root.attributes('-topmost',True)
    root.after_idle(root.attributes,'-topmost',False)
    mainloop()
-
-
-master = Tk()
-resultx = StringVar()
-resulty = StringVar()
-response = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
-responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
-resultx.set(response)
-resulty.set(responsey)
-Label(master, textvariable=resultx).grid(row=0)
-Label(master, textvariable=resulty).grid(row=1)
-
-mainloop()
