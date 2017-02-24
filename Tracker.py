@@ -21,6 +21,13 @@ class Tracker:
            return True
         return False
     
+    def insert(self,x,y,r,t):
+        self.coords[t] = (x,y,r)
+        self.xCoords += [x]
+        self.yCoords += [y]
+        self.rCoords += [r]
+        self.tCoords += [t]
+    
     def find(self):
         pass
     

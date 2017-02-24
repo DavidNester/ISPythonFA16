@@ -21,15 +21,9 @@ class CircleTracker(Tracker):
                 for x,y,r in circles:
                     if self.normal(x,y,r):
                         found = True
-                        self.coords[currentFrame] = (x,y,r)
-                        self.xCoords += [x]
-                        self.yCoords += [y]
-                        self.rCoords += [r]
-                        self.tCoords += [currentFrame]
-                        # draw the circle in the output image, then draw a rectangle
-                        # corresponding to the center of the circle
-                        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4)
-                        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+                        self.insert(x,y,r,currentFrame)
+                        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4) #draw circle on image
+                        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1) #draw rectangle on center
                         self.lastFrameWith = currentFrame
                 if not found:
                     alpha -= 5

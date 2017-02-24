@@ -124,10 +124,6 @@ def update_image(image_label, list, count):
           yLine, = yAxis.plot(tCoords,yCoords,'ro')
           yAxis.draw_artist(yAxis.patch)
           yAxis.draw_artist(yLine)
-      #line.set_ydata(xCoords)
-      #line.set_xdata(tCoords)
-      #line.set_ydata(yCoords)
-      xLine, = xAxis.plot(tCoords,xCoords,'ro')
       yLine, = yAxis.plot(tCoords,yCoords,'ro')
       xLine.set_ydata(xCoords)
       xLine.set_xdata(tCoords)
@@ -136,7 +132,6 @@ def update_image(image_label, list, count):
       yLine.set_ydata(yCoords)
       yLine.set_xdata(tCoords)
       yAxis.draw_artist(yAxis.patch)
-      yAxis.draw_artist(yLine)
       f.canvas.draw()
       f.canvas.flush_events()
       #canvas.draw()
@@ -184,8 +179,6 @@ def image_capture(list):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
-    #global rect,startPoint,endPoint
-    global center,outside,currentFrame,tracker,pause,fps,cap,first,points,ax,plot, frame, list, count
     #get only left mouse click
     x=event.x
     y=event.y
@@ -201,7 +194,6 @@ def on_mouse(event):
             
             x,y = center
             r = distance(center,outside)
-            tracker.coords[count] = (x,y,r)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             tracker.lastFrameWith = count
@@ -298,8 +290,6 @@ if __name__ == '__main__':
    f = Figure(figsize=(10,5), dpi=100)
    xAxis = f.add_subplot(121)
    yAxis = f.add_subplot(122)
-   xLine, = xAxis.plot(tCoords,xCoords,'ro')
-   yLine, = yAxis.plot(tCoords,yCoords,'ro')
 
 
    canvas = FigureCanvasTkAgg(f, master=root)
