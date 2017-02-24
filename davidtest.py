@@ -19,7 +19,6 @@ import matplotlib
 from chaco.shell.commands import yaxis
 import xlsxwriter
 
-#from skimage.io._plugins.qt_plugin import ImageLabel
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -124,6 +123,7 @@ def update_image(image_label, list, count):
           yLine, = yAxis.plot(tCoords,yCoords,'ro')
           yAxis.draw_artist(yAxis.patch)
           yAxis.draw_artist(yLine)
+      """xLine, = xAxis.plot(tCoords,xCoords,'ro')
       yLine, = yAxis.plot(tCoords,yCoords,'ro')
       xLine.set_ydata(xCoords)
       xLine.set_xdata(tCoords)
@@ -132,6 +132,7 @@ def update_image(image_label, list, count):
       yLine.set_ydata(yCoords)
       yLine.set_xdata(tCoords)
       yAxis.draw_artist(yAxis.patch)
+      yAxis.draw_artist(yLine)"""
       f.canvas.draw()
       f.canvas.flush_events()
       #canvas.draw()
@@ -179,6 +180,7 @@ def image_capture(list):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
+    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,count
     #get only left mouse click
     x=event.x
     y=event.y
@@ -194,6 +196,7 @@ def on_mouse(event):
             
             x,y = center
             r = distance(center,outside)
+            tracker.insert(x,y,r,count)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             tracker.lastFrameWith = count
@@ -290,6 +293,8 @@ if __name__ == '__main__':
    f = Figure(figsize=(10,5), dpi=100)
    xAxis = f.add_subplot(121)
    yAxis = f.add_subplot(122)
+   #xLine, = xAxis.plot(tCoords,xCoords,'ro')
+   #yLine, = yAxis.plot(tCoords,yCoords,'ro')
 
 
    canvas = FigureCanvasTkAgg(f, master=root)
