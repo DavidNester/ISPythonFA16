@@ -16,7 +16,7 @@ from collections import deque
 import argparse
 import imutils
 import matplotlib
-from chaco.shell.commands import yaxis
+#from chaco.shell.commands import yaxis
 import xlsxwriter
 
 matplotlib.use("TkAgg")
@@ -26,15 +26,13 @@ from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
 
-global size, r_pixel, f, a, count, w
+height = 0
+width = 0
 radio = 0
 count = 1
 size = 120
 speed = 0
 plot = False
-#currentFrame = 0
-#may move to circle tracker
-plot = True
 xCoords = []
 yCoords = []
 rCoords = []
@@ -80,62 +78,35 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width
    frame = list[count]
-   #currentFrame = count
+   if height == 0:
+       height = len(frame)
+       width = len(frame[0])
    
    #if we already have the frame in memory then use circles that were found
    if count in tracker.coords.keys():
        x,y,r = tracker.coords[count]
    
    #find new circles if new frame and not paused
-   else:
-      if not pause:
-         frame,lost = tracker.find(frame,count,pause)
-         if lost:
-            bottom.config(text='Circle is lost. Please click on the center')
-            pauseVideo()
-    
-    
-  
-    
+   elif not pause:
+       frame,lost = tracker.find(frame,count,pause)
+       if lost:
+           bottom.config(text='Circle is lost. Please click on the center')
+           pauseVideo()
+
    """Plots motion in matplotlib"""
    if plot:
-       #possibly change this so it is in circleTracker
-      xCoords = tracker.getXCoords()
-      yCoords = tracker.getYCoords()
-      rCoords = tracker.getRCoords()
-      tCoords = tracker.getTCoords()
-      
-      """
-      if foundR == False:
-         r_pixel = r
-         foundR=True
-         size_pixel = int(r_pixel)/size
-      """
-      
       #plot the data
       if var.get() == 1 or var.get()==3:
-          xLine, = xAxis.plot(tCoords,xCoords,'ro')
+          xLine, = xAxis.plot(tracker.getTCoords(),tracker.getXCoords(),'ro')
           xAxis.draw_artist(xAxis.patch)
           xAxis.draw_artist(xLine)
       if var.get() == 2 or var.get()==3:
-          yLine, = yAxis.plot(tCoords,yCoords,'ro')
+          yLine, = yAxis.plot(tracker.getTCoords(),tracker.getYCoords(),'ro')
           yAxis.draw_artist(yAxis.patch)
           yAxis.draw_artist(yLine)
-      """xLine, = xAxis.plot(tCoords,xCoords,'ro')
-      yLine, = yAxis.plot(tCoords,yCoords,'ro')
-      xLine.set_ydata(xCoords)
-      xLine.set_xdata(tCoords)
-      xAxis.draw_artist(xAxis.patch)
-      xAxis.draw_artist(xLine)
-      yLine.set_ydata(yCoords)
-      yLine.set_xdata(tCoords)
-      yAxis.draw_artist(yAxis.patch)
-      yAxis.draw_artist(yLine)"""
       f.canvas.draw()
-      f.canvas.flush_events()
-      #canvas.draw()
    
    im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
@@ -156,13 +127,12 @@ def update_all(root, image_label, list):
        update_image(image_label, list, count)
        root.after(0, func=lambda: update_all(root, image_label, list))
    elif count+1 >= len(list):
-       bottom.config(text='Total Distance')
        workbook = xlsxwriter.Workbook('arrays.xlsx')
        worksheet = workbook.add_worksheet()
        for x in xCoords:
            worksheet.writecolumn(x);
        
-       worksheet.save()
+        #workbook.save() #this wasnt working
        
 
 #multiprocessing image processing functions-------------------------------------
@@ -232,6 +202,40 @@ def fastForward():
     global speed
     speed += 1
 
+def reset():
+    global radio,count,size,speed,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+    radio = 0
+    count = 1
+    size = 120
+    speed = 0
+    plot = False
+    xCoords = []
+    yCoords = []
+    rCoords = []
+    tCoords = []
+    size_pixel = 0
+    r_pixel = 0
+    var  = 0
+    f = ""
+    xAxis = ""
+    yAxis = ""
+    fps = 123
+    xdistance_cm = 0
+    xdistance_in = 0
+    ydistance_cm = 0
+    ydistance_in = 0
+    center = None
+    outside = None
+    first = None
+    bottom = ''
+    frame = ''
+    pause = True
+    xLine = 0
+    yLine = 0
+
+    tracker = CircleTracker()
+    update_all(root,image_label,list)
+
 def submitData():
     global size, bottom
     size = float(input.get())
@@ -252,12 +256,20 @@ def displayChoice():
     
     if var.get()==1:
         xAxis = f.add_subplot(111)
+        xAxis.set_xlim([0,len(list)])
+        xAxis.set_ylim([0,width])
     elif var.get() == 2:
         yAxis = f.add_subplot(111)
+        yAxis.set_xlim([0,len(list)])
+        yAxis.set_ylim([0,height])
     elif var.get() == 3:
         f = Figure(figsize=(10,5), dpi=100)
         xAxis = f.add_subplot(121)
+        xAxis.set_xlim([0,len(list)])
+        xAxis.set_ylim([0,width])
         yAxis = f.add_subplot(122)
+        yAxis.set_xlim([0,len(list)])
+        yAxis.set_ylim([0,height])
    
     canvas = FigureCanvasTkAgg(f, master=root)
     canvas.show()
@@ -268,10 +280,9 @@ if __name__ == '__main__':
    list = list()
    root = Toplevel()
    root.wm_title("Object Tracker")
-   
-   
+
    var = IntVar()
-   image_label = Label(master=root)# label for the video frame
+   image_label = Label(master=root) #label for the video frame
    image_label.grid(row=0, column=0, columnspan=4)
    p = image_capture(list)
    image_label.bind('<Button-1>',on_mouse)
@@ -289,17 +300,6 @@ if __name__ == '__main__':
    displayPlot = Button(master=holder, text="Plot", command=displayChoice)
    displayPlot.pack(side="top")
    holder.grid(row=0, column=4, rowspan=4)
-
-   f = Figure(figsize=(10,5), dpi=100)
-   xAxis = f.add_subplot(121)
-   yAxis = f.add_subplot(122)
-   #xLine, = xAxis.plot(tCoords,xCoords,'ro')
-   #yLine, = yAxis.plot(tCoords,yCoords,'ro')
-
-
-   canvas = FigureCanvasTkAgg(f, master=root)
-   canvas.show()
-   canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
    
    size = len(list)
    update_image(image_label, list, 0)
@@ -333,8 +333,11 @@ if __name__ == '__main__':
    submit = Button(master=root, text='Submit', command=submitData)
    submit.grid(row=3, column=3)
    
-   """end = Button(master=root, text='End', command=quit_(root))
-   end.grid(row = 4, column = 3, columnspan = 2)"""
+   end = Button(master=root, text='End', command= lambda: quit_(root))
+   end.grid(row = 4, column = 3)
+   
+   reset = Button(master=root, text='Reset', command = reset)
+   reset.grid(row = 4, column = 2)
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, list))
@@ -346,16 +349,20 @@ if __name__ == '__main__':
 
 
 master = Tk()
+master = Toplevel()
+master.wm_title("Object Tracker")
+
 resultx = StringVar()
 resulty = StringVar()
 xdistance_cm = tracker.xMax() - tracker.xMin()
 ydistance_cm = tracker.yMax() - tracker.yMin()
-
-response = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
+#dont forget radius (avg(rCoords))
+responsex = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
 responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
-resultx.set(response)
+resultx.set(responsex)
 resulty.set(responsey)
 Label(master, textvariable=resultx).grid(row=0)
 Label(master, textvariable=resulty).grid(row=1)
+
 
 mainloop()

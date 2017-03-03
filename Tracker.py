@@ -43,16 +43,16 @@ class Tracker:
     def getTCoords(self):
        return self.tCoords
     
-    def xMax():
-        return max(xCoords)
+    def xMax(self):
+        return max(self.xCoords)
 
-    def xMin():
-        return min(xCoords)
+    def xMin(self):
+        return min(self.xCoords)
 
-    def yMax():
-        return max(yCoords)
+    def yMax(self):
+        return max(self.yCoords)
       
-    def yMin():
-        return min(yCoords)
+    def yMin(self):
+        return min(self.yCoords)
 
 
