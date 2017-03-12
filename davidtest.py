@@ -17,7 +17,7 @@ import argparse
 import imutils
 import matplotlib
 #from chaco.shell.commands import yaxis
-import xlsxwriter
+import xlwt
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -78,7 +78,8 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords
+   count -= 1
    frame = list[count]
    if height == 0:
        height = len(frame)
@@ -106,6 +107,9 @@ def update_image(image_label, list, count):
           yLine, = yAxis.plot(tracker.getTCoords(),tracker.getYCoords(),'ro')
           yAxis.draw_artist(yAxis.patch)
           yAxis.draw_artist(yLine)
+      if count == len(list)-1:
+          xCoords = tracker.getXCoords()
+          print "yp"
       f.canvas.draw()
    
    im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
@@ -116,23 +120,16 @@ def update_image(image_label, list, count):
    root.update()
 
 def update_all(root, image_label, list):
-   global count, speed, bottom
+   global count, speed, bottom, xCoords, tracker
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
        count = count + (1*speed)
-   if pause == False and count+1 < len(list):
+   if pause == False and count < len(list):
        count += 1
        w.set(count)
        update_image(image_label, list, count)
        root.after(0, func=lambda: update_all(root, image_label, list))
-   elif count+1 >= len(list):
-       workbook = xlsxwriter.Workbook('arrays.xlsx')
-       worksheet = workbook.add_worksheet()
-       for x in xCoords:
-           worksheet.writecolumn(x);
-       
-        #workbook.save() #this wasnt working
        
 
 #multiprocessing image processing functions-------------------------------------
@@ -275,7 +272,32 @@ def displayChoice():
     canvas.show()
     canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
  
+  
+def exportData():
+    global xCoords, yCoords, tracker
+    xCoords = tracker.getXCoords
+    yCoords = tracker.getYCoords
+    workbook = xlwt.Workbook()
+    worksheet = workbook.add_sheet('Data')
+    worksheet.write(0, 0, 'X Axis')
+    worksheet.write(0, 1, 'Y Axis')
+       
+    xCoords = tracker.getXCoords()
+    count = 1
+    for x in xCoords:
+        worksheet.write(count, 0, x)
+        count += 1
+       
+    count = 1
+    yCoords = tracker.getYCoords()
+    for y in yCoords:
+       worksheet.write(count, 1, y)
+       count += 1
+   
+    workbook.save('array.xls')  #this wasnt working
+    print "workbook"
     
+  
 if __name__ == '__main__':
    list = list()
    root = Toplevel()
@@ -332,6 +354,9 @@ if __name__ == '__main__':
    
    submit = Button(master=root, text='Submit', command=submitData)
    submit.grid(row=3, column=3)
+   
+   export = Button(master=root, text='Export', command= lambda: exportData())
+   export.grid(row = 4, column = 1)
    
    end = Button(master=root, text='End', command= lambda: quit_(root))
    end.grid(row = 4, column = 3)
