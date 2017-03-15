@@ -358,13 +358,13 @@ if __name__ == '__main__':
    submit = Button(master=root, text='Submit', command=submitData)
    submit.grid(row=3, column=3)
    
-   export = Button(master=root, text='Export', command= lambda: exportData())
+   export = Button(master=root, text='Export', bg='red', command= lambda: exportData())
    export.grid(row = 4, column = 1)
    
-   end = Button(master=root, text='End', command= lambda: quit_(root))
+   end = Button(master=root, text='End',bg='red', command= lambda: quit_(root))
    end.grid(row = 4, column = 3)
    
-   reset = Button(master=root, text='Reset', command = reset)
+   reset = Button(master=root,bg='red', text='Reset', command = reset)
    reset.grid(row = 4, column = 2)
    
    # setup the update callback
