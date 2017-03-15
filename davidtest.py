@@ -78,8 +78,7 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords
-   count -= 1
+   global xAxis,yAxis,canvas,f,xLine,yLine,height,width,frame
    frame = list[count]
    if height == 0:
        height = len(frame)
@@ -120,7 +119,7 @@ def update_image(image_label, list, count):
    root.update()
 
 def update_all(root, image_label, list):
-   global count, speed, bottom, xCoords, tracker
+   global count
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
@@ -147,7 +146,7 @@ def image_capture(list):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
-    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,count
+    global center,outside,tracker,pause,first,frame
     #get only left mouse click
     x=event.x
     y=event.y
@@ -159,7 +158,6 @@ def on_mouse(event):
             outside = (x,y)
             if first is None:
                 first = (center[0],center[1],distance(center,outside),count)
-            
             
             x,y = center
             r = distance(center,outside)
@@ -274,26 +272,31 @@ def displayChoice():
  
   
 def exportData():
-    global xCoords, yCoords, tracker
-    xCoords = tracker.getXCoords
-    yCoords = tracker.getYCoords
+    global xCoords, yCoords, tCoords
+    xCoords = tracker.getXCoords()
+    yCoords = tracker.getYCoords()
+    tCoords = tracker.getTCoords()
     workbook = xlwt.Workbook()
     worksheet = workbook.add_sheet('Data')
-    worksheet.write(0, 0, 'X Axis')
-    worksheet.write(0, 1, 'Y Axis')
-       
-    xCoords = tracker.getXCoords()
-    count = 1
+    worksheet.write(0, 0, 'Frame')
+    worksheet.write(0, 1, 'X Axis')
+    worksheet.write(0, 2, 'Y Axis')
+    
+    num = 1
+    for t in tCoords:
+        worksheet.write(num, 0, t)
+        num += 1
+
+    num = 1
     for x in xCoords:
-        worksheet.write(count, 0, x)
-        count += 1
+        worksheet.write(num, 1, x)
+        num += 1
        
-    count = 1
-    yCoords = tracker.getYCoords()
+    num = 1
     for y in yCoords:
-       worksheet.write(count, 1, y)
-       count += 1
-   
+       worksheet.write(num, 2, y)
+       num += 1
+
     workbook.save('array.xls')  #this wasnt working
     print "workbook"
     
