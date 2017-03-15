@@ -29,7 +29,7 @@ from circleTracker import CircleTracker
 height = 0
 width = 0
 radio = 0
-count = 1
+currentFrame = 1
 size = 120
 speed = 0
 plot = False
@@ -77,20 +77,20 @@ def quit_(root):
     root.destroy()
 
   
-def update_image(image_label, list, count):
+def update_image(image_label, video, currentFrame):
    global xAxis,yAxis,canvas,f,xLine,yLine,height,width,frame
-   frame = list[count]
+   frame = video[currentFrame]
    if height == 0:
        height = len(frame)
        width = len(frame[0])
    
    #if we already have the frame in memory then use circles that were found
-   if count in tracker.coords.keys():
-       x,y,r = tracker.coords[count]
+   if currentFrame in tracker.coords.keys():
+       x,y,r = tracker.coords[currentFrame]
    
    #find new circles if new frame and not paused
    elif not pause:
-       frame,lost = tracker.find(frame,count,pause)
+       frame,lost = tracker.find(frame,currentFrame,pause)
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
@@ -106,40 +106,40 @@ def update_image(image_label, list, count):
           yLine, = yAxis.plot(tracker.getTCoords(),tracker.getYCoords(),'ro')
           yAxis.draw_artist(yAxis.patch)
           yAxis.draw_artist(yLine)
-      if count == len(list)-1:
+      if currentFrame == len(video)-1:
           xCoords = tracker.getXCoords()
           print "yp"
       f.canvas.draw()
    
-   im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
+   im = cv2.cvtColor(video[currentFrame], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
    image_label.configure(image=b)
    image_label._image_cache = b  #avoid garbage collection
    root.update()
 
-def update_all(root, image_label, list):
-   global count
+def update_all(root, image_label, video):
+   global currentFrame
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
-       count = count + (1*speed)
-   if pause == False and count < len(list):
-       count += 1
-       w.set(count)
-       update_image(image_label, list, count)
-       root.after(0, func=lambda: update_all(root, image_label, list))
+       currentFrame = currentFrame + (1*speed)
+   if pause == False and currentFrame < len(video):
+       currentFrame += 1
+       w.set(currentFrame)
+       update_image(image_label, video, currentFrame)
+       root.after(0, func=lambda: update_all(root, image_label, video))
        
 
 #multiprocessing image processing functions-------------------------------------
-def image_capture(list):
+def image_capture(video):
    vidFile = cv2.VideoCapture(tempdir)
    while True:
       try:
          flag, frame=vidFile.read()
          if flag==0:
              break
-         list.append(frame)
+         video.append(frame)
       except:
          continue
 
@@ -157,16 +157,16 @@ def on_mouse(event):
         if center is not None:
             outside = (x,y)
             if first is None:
-                first = (center[0],center[1],distance(center,outside),count)
+                first = (center[0],center[1],distance(center,outside),currentFrame)
             
             x,y = center
             r = distance(center,outside)
-            tracker.insert(x,y,r,count)
+            tracker.insert(x,y,r,currentFrame)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            tracker.lastFrameWith = count
+            tracker.lastFrameWith = currentFrame
             #return to normal state
-            playVideo(root,image_label,list)
+            playVideo(root,image_label,video)
             center = outside = None
             bottom.config(text='')
         #if first click (center)
@@ -175,19 +175,19 @@ def on_mouse(event):
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             bottom.config(text='Click on the outside of the circle')
                  
-def playVideo(root, image_label, list):
+def playVideo(root, image_label, video):
     global pause
     pause = False
-    update_all(root, image_label, list)
+    update_all(root, image_label, video)
     
 def pauseVideo():
     global pause
     pause = True
     
-def updateCount(image_label, list):
-    global count
-    count = w.get()
-    update_image(image_label, list, count)
+def updateCurrentFrame(image_label, video):
+    global currentFrame
+    currentFrame = w.get()
+    update_image(image_label, video, currentFrame)
     
 def slowDown():
     global speed
@@ -198,9 +198,9 @@ def fastForward():
     speed += 1
 
 def reset():
-    global radio,count,size,speed,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+    global radio,currentFrame,size,speed,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
     radio = 0
-    count = 1
+    currentFrame = 1
     size = 120
     speed = 0
     plot = False
@@ -229,7 +229,7 @@ def reset():
     yLine = 0
 
     tracker = CircleTracker()
-    update_all(root,image_label,list)
+    update_all(root,image_label,video)
 
 def submitData():
     global size, bottom
@@ -251,19 +251,19 @@ def displayChoice():
     
     if var.get()==1:
         xAxis = f.add_subplot(111)
-        xAxis.set_xlim([0,len(list)])
+        xAxis.set_xlim([0,len(video)])
         xAxis.set_ylim([0,width])
     elif var.get() == 2:
         yAxis = f.add_subplot(111)
-        yAxis.set_xlim([0,len(list)])
+        yAxis.set_xlim([0,len(video)])
         yAxis.set_ylim([0,height])
     elif var.get() == 3:
         f = Figure(figsize=(10,5), dpi=100)
         xAxis = f.add_subplot(121)
-        xAxis.set_xlim([0,len(list)])
+        xAxis.set_xlim([0,len(video)])
         xAxis.set_ylim([0,width])
         yAxis = f.add_subplot(122)
-        yAxis.set_xlim([0,len(list)])
+        yAxis.set_xlim([0,len(video)])
         yAxis.set_ylim([0,height])
    
     canvas = FigureCanvasTkAgg(f, master=root)
@@ -302,14 +302,14 @@ def exportData():
     
   
 if __name__ == '__main__':
-   list = list()
+   video = video()
    root = Toplevel()
    root.wm_title("Object Tracker")
 
    var = IntVar()
    image_label = Label(master=root) #label for the video frame
    image_label.grid(row=0, column=0, columnspan=4)
-   p = image_capture(list)
+   p = image_capture(video)
    image_label.bind('<Button-1>',on_mouse)
    
    holder = Frame(master=root)
@@ -326,11 +326,11 @@ if __name__ == '__main__':
    displayPlot.pack(side="top")
    holder.grid(row=0, column=4, rowspan=4)
    
-   size = len(list)
-   update_image(image_label, list, 0)
+   size = len(video)
+   update_image(image_label, video, 0)
    slider_width = image_label.winfo_width()
    w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
-   w.bind("<ButtonRelease-1>", lambda event: updateCount(image_label, list))
+   w.bind("<ButtonRelease-1>", lambda event: updateCurrentFrame(image_label, video))
    w.grid(row=1, column=0, columnspan=4)
 
    # pause button
@@ -338,7 +338,7 @@ if __name__ == '__main__':
    pauseButton.grid(row=2, column=0)
    
    #play button
-   playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
+   playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
    playButton.grid(row=2, column=1)
    
    #slow down
@@ -368,7 +368,7 @@ if __name__ == '__main__':
    reset.grid(row = 4, column = 2)
    
    # setup the update callback
-   root.after(0, func=lambda: update_all(root, image_label, list))
+   root.after(0, func=lambda: update_all(root, image_label, video))
    
    root.lift()
    root.attributes('-topmost',True)
