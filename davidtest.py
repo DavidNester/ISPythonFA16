@@ -272,7 +272,6 @@ def displayChoice():
  
   
 def exportData():
-    global xCoords, yCoords, tCoords
     xCoords = tracker.getXCoords()
     yCoords = tracker.getYCoords()
     tCoords = tracker.getTCoords()
@@ -302,7 +301,7 @@ def exportData():
     
   
 if __name__ == '__main__':
-   video = video()
+   video = list()
    root = Toplevel()
    root.wm_title("Object Tracker")
 
@@ -361,8 +360,8 @@ if __name__ == '__main__':
    export = Button(master=root, text='Export', bg='red', command= lambda: exportData())
    export.grid(row = 4, column = 1)
    
-   end = Button(master=root, text='End',bg='red', command= lambda: quit_(root))
-   end.grid(row = 4, column = 3)
+   close = Button(master=root, text='Close',bg='red', command= lambda: quit_(root))
+   close.grid(row = 4, column = 3)
    
    reset = Button(master=root,bg='red', text='Reset', command = reset)
    reset.grid(row = 4, column = 2)
