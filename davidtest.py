@@ -18,6 +18,7 @@ import imutils
 import matplotlib
 #from chaco.shell.commands import yaxis
 import xlwt
+from pyface.message_dialog import information
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -26,6 +27,7 @@ from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
 
+reset = ""
 height = 0
 width = 0
 radio = 0
@@ -56,14 +58,19 @@ frame = ''
 pause = True
 xLine = 0
 yLine = 0
+input = ""
+tempdir = ""
+xPlot = ""
+w = ""
+yPlot = ""
+bothPlot = ""
+displayPlot = ""
+var = ""
+information  = ""
+submit = ""
+image_label = ""
 
 tracker = CircleTracker()
-
-"""INPUT FILE"""
-root = Tk()
-root.withdraw() #use to hide tkinter window
-currdir = os.getcwd() #sets current directory
-tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -78,8 +85,7 @@ def quit_(root):
 
   
 def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords
-   count -= 1
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var
    frame = list[count]
    if height == 0:
        height = len(frame)
@@ -96,9 +102,12 @@ def update_image(image_label, list, count):
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
 
+   print  
+   
    """Plots motion in matplotlib"""
    if plot:
       #plot the data
+      
       if var.get() == 1 or var.get()==3:
           xLine, = xAxis.plot(tracker.getTCoords(),tracker.getXCoords(),'ro')
           xAxis.draw_artist(xAxis.patch)
@@ -107,9 +116,6 @@ def update_image(image_label, list, count):
           yLine, = yAxis.plot(tracker.getTCoords(),tracker.getYCoords(),'ro')
           yAxis.draw_artist(yAxis.patch)
           yAxis.draw_artist(yLine)
-      if count == len(list)-1:
-          xCoords = tracker.getXCoords()
-          print "yp"
       f.canvas.draw()
    
    im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
@@ -120,7 +126,7 @@ def update_image(image_label, list, count):
    root.update()
 
 def update_all(root, image_label, list):
-   global count, speed, bottom, xCoords, tracker
+   global count, speed, bottom, xCoords, tracker, w
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
@@ -134,6 +140,7 @@ def update_all(root, image_label, list):
 
 #multiprocessing image processing functions-------------------------------------
 def image_capture(list):
+   global tempdir
    vidFile = cv2.VideoCapture(tempdir)
    while True:
       try:
@@ -147,7 +154,7 @@ def image_capture(list):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
-    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,count
+    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,count, image_label
     #get only left mouse click
     x=event.x
     y=event.y
@@ -200,7 +207,7 @@ def fastForward():
     speed += 1
 
 def reset():
-    global radio,count,size,speed,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+    global radio,count,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
     radio = 0
     count = 1
     size = 120
@@ -234,7 +241,7 @@ def reset():
     update_all(root,image_label,list)
 
 def submitData():
-    global size, bottom
+    global size, bottom, input, information, submit
     size = float(input.get())
     information.destroy()
     input.destroy()
@@ -243,7 +250,7 @@ def submitData():
     bottom.grid(row=3, column=0, columnspan=4)
     
 def displayChoice():
-    global plot, f, xAxis, yAxis
+    global plot, f, xAxis, yAxis, yPlot, xPlot, bothPlot, displayPlot, var
     plot = True
     xPlot.destroy()
     yPlot.destroy()
@@ -296,12 +303,13 @@ def exportData():
    
     workbook.save('array.xls')  #this wasnt working
     print "workbook"
-    
-  
-if __name__ == '__main__':
-   list = list()
-   root = Toplevel()
-   root.wm_title("Object Tracker")
+
+def open():
+   global tempdir, xPlot, yPlot, bothPlot, displayPlot, var, input, reset, information, submit, image_label
+   openButton.destroy()
+   """INPUT FILE"""
+   currdir = os.getcwd() #sets current directory
+   tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV"), ("HTML files", "*.html;*.htm"),("All files", "*.*"))) #requests file name and type of files
 
    var = IntVar()
    image_label = Label(master=root) #label for the video frame
@@ -365,7 +373,17 @@ if __name__ == '__main__':
    reset.grid(row = 4, column = 2)
    
    # setup the update callback
-   root.after(0, func=lambda: update_all(root, image_label, list))
+   root.after(0, func=lambda: update_all(root, image_label, list))    
+  
+if __name__ == '__main__':
+   root = Tk()
+   root.withdraw() #use to hide tkinter window
+   list = list()
+   root = Toplevel()
+   root.wm_title("Object Tracker")
+
+   openButton = Button(master=root, text="OPEN VIDEO", command= lambda: open())
+   openButton.grid(row=0, column=0, padx=100, pady=100)
    
    root.lift()
    root.attributes('-topmost',True)
@@ -373,7 +391,7 @@ if __name__ == '__main__':
    mainloop()
 
 
-master = Tk()
+"""master = Tk()
 master = Toplevel()
 master.wm_title("Object Tracker")
 
@@ -390,4 +408,4 @@ Label(master, textvariable=resultx).grid(row=0)
 Label(master, textvariable=resulty).grid(row=1)
 
 
-mainloop()
+mainloop()"""
