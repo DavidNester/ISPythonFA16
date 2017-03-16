@@ -304,14 +304,14 @@ if __name__ == '__main__':
    video = list()
    root = Toplevel()
    root.wm_title("Object Tracker")
-
+   
    var = IntVar()
    image_label = Label(master=root) #label for the video frame
    image_label.grid(row=0, column=0, columnspan=4)
-   p = image_capture(video)
+   p = image_capture(video) #this line takes a rally long time
    image_label.bind('<Button-1>',on_mouse)
-   
    holder = Frame(master=root)
+   
    xPlot = Radiobutton(master=holder, text="X Axis", variable=var, value=1)
    xPlot.pack(side="top")
    
