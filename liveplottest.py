@@ -18,7 +18,6 @@ import imutils
 import matplotlib
 #from chaco.shell.commands import yaxis
 import xlwt
-from pyface.message_dialog import information
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -27,7 +26,6 @@ from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
 
-reset = ""
 height = 0
 width = 0
 radio = 0
@@ -58,19 +56,21 @@ frame = ''
 pause = True
 xLine = 0
 yLine = 0
-input = ""
-tempdir = ""
-xPlot = ""
-w = ""
-yPlot = ""
-bothPlot = ""
-displayPlot = ""
-var = ""
-information  = ""
-submit = ""
-image_label = ""
+fig = None
+axes = None
+lines= None
+backgrounds = None
+canvas = None
+old=0
+
 
 tracker = CircleTracker()
+
+"""INPUT FILE"""
+root = Tk()
+root.withdraw() #use to hide tkinter window
+currdir = os.getcwd() #sets current directory
+tempdir = tkFileDialog.askopenfilename( filetypes = (("HTML files", "*.html;*.htm"),("Movie files", "*.MOV"),("All files", "*.*"))) #requests file name and type of files
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -84,15 +84,9 @@ def quit_(root):
     root.destroy()
 
   
- 
-def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var
-   frame = list[count]
- 
 def update_image(image_label, video, currentFrame):
-   global xAxis,yAxis,canvas,f,xLine,yLine,height,width,frame
+   global xAxis,yAxis,canvas,f,xLine,yLine,height,width,frame,backgrounds
    frame = video[currentFrame]
- 
    if height == 0:
        height = len(frame)
        width = len(frame[0])
@@ -108,28 +102,21 @@ def update_image(image_label, video, currentFrame):
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
 
-   print  
-   
    """Plots motion in matplotlib"""
    if plot:
-      #plot the data
-      
-      if var.get() == 1 or var.get()==3:
-          xLine, = xAxis.plot(tracker.getTCoords(),tracker.getXCoords(),'ro')
-          xAxis.draw_artist(xAxis.patch)
-          xAxis.draw_artist(xLine)
-      if var.get() == 2 or var.get()==3:
-          yLine, = yAxis.plot(tracker.getTCoords(),tracker.getYCoords(),'ro')
-          yAxis.draw_artist(yAxis.patch)
-          yAxis.draw_artist(yLine)
- 
- 
-      if currentFrame == len(video)-1:
-          xCoords = tracker.getXCoords()
-          print "yp"
- 
-      f.canvas.draw()
-   
+      items = enumerate(zip(lines,axes,backgrounds),start = 1)
+      for j,(line,ax,background) in items:
+          f.canvas.restore_region(background)
+          if j == 1:
+             line.set_ydata(tracker.coords[old][0])
+             line.set_xdata(old)
+          if j == 2:
+             line.set_ydata(tracker.coords[old][1])
+             line.set_xdata(old)
+          ax.draw_artist(line)
+          f.canvas.blit(ax.bbox)
+      backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
+
    im = cv2.cvtColor(video[currentFrame], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
@@ -137,13 +124,9 @@ def update_image(image_label, video, currentFrame):
    image_label._image_cache = b  #avoid garbage collection
    root.update()
 
- 
-def update_all(root, image_label, list):
-   global count, speed, bottom, xCoords, tracker, w
- 
 def update_all(root, image_label, video):
-   global currentFrame
- 
+   global currentFrame,old
+   old = currentFrame
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
@@ -151,17 +134,12 @@ def update_all(root, image_label, video):
    if pause == False and currentFrame < len(video):
        currentFrame += 1
        w.set(currentFrame)
-       update_image(image_label, video, currentFrame)
+       update_image(image_label, video, old)
        root.after(0, func=lambda: update_all(root, image_label, video))
        
 
 #multiprocessing image processing functions-------------------------------------
- 
-def image_capture(list):
-   global tempdir
- 
 def image_capture(video):
- 
    vidFile = cv2.VideoCapture(tempdir)
    while True:
       try:
@@ -175,11 +153,7 @@ def image_capture(video):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
- 
-    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,count, image_label
- 
     global center,outside,tracker,pause,first,frame
- 
     #get only left mouse click
     x=event.x
     y=event.y
@@ -231,11 +205,7 @@ def fastForward():
     speed += 1
 
 def reset():
- 
-    global radio,count,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
- 
     global radio,currentFrame,size,speed,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
- 
     radio = 0
     currentFrame = 1
     size = 120
@@ -248,7 +218,7 @@ def reset():
     size_pixel = 0
     r_pixel = 0
     var  = 0
-    f = ""
+    f = None
     xAxis = ""
     yAxis = ""
     fps = 123
@@ -269,7 +239,7 @@ def reset():
     update_all(root,image_label,video)
 
 def submitData():
-    global size, bottom, input, information, submit
+    global size, bottom
     size = float(input.get())
     information.destroy()
     input.destroy()
@@ -278,34 +248,28 @@ def submitData():
     bottom.grid(row=3, column=0, columnspan=4)
     
 def displayChoice():
-    global plot, f, xAxis, yAxis, yPlot, xPlot, bothPlot, displayPlot, var
+    global plot,f,axes,lines,canvas,backgrounds
     plot = True
     xPlot.destroy()
     yPlot.destroy()
     bothPlot.destroy()
     displayPlot.destroy()
-    f = Figure(figsize=(5,5), dpi=100)
     
-    if var.get()==1:
-        xAxis = f.add_subplot(111)
-        xAxis.set_xlim([0,len(video)])
-        xAxis.set_ylim([0,width])
-    elif var.get() == 2:
-        yAxis = f.add_subplot(111)
-        yAxis.set_xlim([0,len(video)])
-        yAxis.set_ylim([0,height])
-    elif var.get() == 3:
-        f = Figure(figsize=(10,5), dpi=100)
-        xAxis = f.add_subplot(121)
-        xAxis.set_xlim([0,len(video)])
-        xAxis.set_ylim([0,width])
-        yAxis = f.add_subplot(122)
-        yAxis.set_xlim([0,len(video)])
-        yAxis.set_ylim([0,height])
-   
+    axes=[]
+    f = Figure(figsize=(5,5), dpi=100)
+    axes += [f.add_subplot(121)]
+    axes += [f.add_subplot(122)]
+    axes[0].set_xlim([0,len(video)])
+    axes[0].set_ylim([0,width])
+    axes[1].set_xlim([0,len(video)])
+    axes[1].set_ylim([0,height])
+    #fig,axes = plt.subplots(2)
+
     canvas = FigureCanvasTkAgg(f, master=root)
-    canvas.show()
+    canvas.draw()
     canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
+    lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
+    backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
  
   
 def exportData():
@@ -335,16 +299,6 @@ def exportData():
 
     workbook.save('array.xls')  #this wasnt working
     print "workbook"
- 
-
-def open():
-   global tempdir, xPlot, yPlot, bothPlot, displayPlot, var, input, reset, information, submit, image_label
-   openButton.destroy()
-   """INPUT FILE"""
-   currdir = os.getcwd() #sets current directory
-   tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV"), ("HTML files", "*.html;*.htm"),("All files", "*.*"))) #requests file name and type of files
-
- 
     
   
 if __name__ == '__main__':
@@ -352,7 +306,6 @@ if __name__ == '__main__':
    root = Toplevel()
    root.wm_title("Object Tracker")
    
- 
    var = IntVar()
    image_label = Label(master=root) #label for the video frame
    image_label.grid(row=0, column=0, columnspan=4)
@@ -415,21 +368,7 @@ if __name__ == '__main__':
    reset.grid(row = 4, column = 2)
    
    # setup the update callback
- 
-   root.after(0, func=lambda: update_all(root, image_label, list))    
-  
-if __name__ == '__main__':
-   root = Tk()
-   root.withdraw() #use to hide tkinter window
-   list = list()
-   root = Toplevel()
-   root.wm_title("Object Tracker")
-
-   openButton = Button(master=root, text="OPEN VIDEO", command= lambda: open())
-   openButton.grid(row=0, column=0, padx=100, pady=100)
- 
    root.after(0, func=lambda: update_all(root, image_label, video))
- 
    
    root.lift()
    root.attributes('-topmost',True)
@@ -437,7 +376,7 @@ if __name__ == '__main__':
    mainloop()
 
 
-"""master = Tk()
+master = Tk()
 master = Toplevel()
 master.wm_title("Object Tracker")
 
@@ -454,4 +393,4 @@ Label(master, textvariable=resultx).grid(row=0)
 Label(master, textvariable=resulty).grid(row=1)
 
 
-mainloop()"""
+mainloop()
