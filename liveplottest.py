@@ -261,8 +261,10 @@ def displayChoice():
     axes += [f.add_subplot(122)]
     axes[0].set_xlim([0,len(video)])
     axes[0].set_ylim([0,width])
+    axes[0].plot(tracker.getXCoords(),tracker.getTCoords(),'ro')
     axes[1].set_xlim([0,len(video)])
     axes[1].set_ylim([0,height])
+    axes[1].plot(tracker.getYCoords(),tracker.getTCoords(),'ro')
     #fig,axes = plt.subplots(2)
 
     canvas = FigureCanvasTkAgg(f, master=root)
