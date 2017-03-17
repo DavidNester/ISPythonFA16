@@ -100,8 +100,6 @@ def update_image(image_label, list, count):
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
-
-   print  
    
    """Plots motion in matplotlib"""
    if plot:
@@ -243,16 +241,29 @@ def reset():
     update_all(root,image_label,list)
 
 def submitData():
-    global size, bottom, input, information, submit
+    global size, bottom, input, information, submit,xPlot,yPlot,bothPlot,displayPlot
     size = float(input.get())
     information.destroy()
     input.destroy()
     submit.destroy()
-    bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
-    bottom.grid(row=3, column=0, columnspan=4)
+    
+    holder = Frame(master=root)
+    
+    xPlot = Radiobutton(master=holder, text="X Axis", variable=var, value=1)
+    xPlot.pack(side="left")
+   
+    yPlot = Radiobutton(master=holder, text="Y Axis", variable=var, value=2)
+    yPlot.pack(side="left")
+   
+    bothPlot = Radiobutton(master=holder, text="Both Axis", variable=var, value=3)
+    bothPlot.pack(side="left")
+   
+    displayPlot = Button(master=holder, text="Plot", command=displayChoice)
+    displayPlot.pack(side="left")
+    holder.grid(row=3, column=1, columnspan=4)
     
 def displayChoice():
-    global plot, f, xAxis, yAxis, yPlot, xPlot, bothPlot, displayPlot, var
+    global plot, f, xAxis, yAxis, yPlot, xPlot, bothPlot, displayPlot, var, bottom
     plot = True
     xPlot.destroy()
     yPlot.destroy()
@@ -280,7 +291,30 @@ def displayChoice():
     canvas = FigureCanvasTkAgg(f, master=root)
     canvas.show()
     canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
- 
+
+    # pause button
+    pauseButton = Button(master=root, text="Pause", command=pauseVideo)
+    pauseButton.grid(row=2, column=0)
+   
+    #play button
+    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
+    playButton.grid(row=2, column=1)
+   
+    #slow down
+    slowButton = Button(master=root, text='Slow Down', command=slowDown)
+    slowButton.grid(row=2, column=2)
+   
+    #fast forward
+    fastButton = Button(master=root, text='Speed Up', command=fastForward)
+    fastButton.grid(row=2, column=3)
+
+    export = Button(master=root, text='Export', command= lambda: exportData())
+    export.grid(row = 4, column = 1)
+
+    bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
+    bottom.grid(row=3, column=0, columnspan=4)
+
+
   
 def exportData():
     global xCoords, yCoords, tracker
@@ -322,20 +356,6 @@ def open():
    p = image_capture(list)
    image_label.bind('<Button-1>',on_mouse)
    
-   holder = Frame(master=root)
-   xPlot = Radiobutton(master=holder, text="X Axis", variable=var, value=1)
-   xPlot.pack(side="top")
-   
-   yPlot = Radiobutton(master=holder, text="Y Axis", variable=var, value=2)
-   yPlot.pack(side="top")
-   
-   bothPlot = Radiobutton(master=holder, text="Both Axis", variable=var, value=3)
-   bothPlot.pack(side="top")
-   
-   displayPlot = Button(master=holder, text="Plot", command=displayChoice)
-   displayPlot.pack(side="top")
-   holder.grid(row=0, column=4, rowspan=4)
-   
    size = len(list)
    update_image(image_label, list, 0)
    slider_width = image_label.winfo_width()
@@ -343,22 +363,6 @@ def open():
    w.bind("<ButtonRelease-1>", lambda event: updateCount(image_label, list))
    w.grid(row=1, column=0, columnspan=4)
 
-   # pause button
-   pauseButton = Button(master=root, text="Pause", command=pauseVideo)
-   pauseButton.grid(row=2, column=0)
-   
-   #play button
-   playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
-   playButton.grid(row=2, column=1)
-   
-   #slow down
-   slowButton = Button(master=root, text='Slow Down', command=slowDown)
-   slowButton.grid(row=2, column=2)
-   
-   #fast forward
-   fastButton = Button(master=root, text='Speed Up', command=fastForward)
-   fastButton.grid(row=2, column=3)
-   
    information = Label(master=root, text="Enter the size of the object (cm): ")
    information.grid(row=3, column=0, columnspan=2)
    
@@ -367,9 +371,6 @@ def open():
    
    submit = Button(master=root, text='Submit', command=submitData)
    submit.grid(row=3, column=3)
-   
-   export = Button(master=root, text='Export', command= lambda: exportData())
-   export.grid(row = 4, column = 1)
    
    end = Button(master=root, text='End', command= lambda: quit_(root))
    end.grid(row = 4, column = 3)
