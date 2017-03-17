@@ -16,9 +16,7 @@ from collections import deque
 import argparse
 import imutils
 import matplotlib
-#from chaco.shell.commands import yaxis
 import xlwt
-from pyface.message_dialog import information
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
