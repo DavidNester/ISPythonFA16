@@ -58,6 +58,7 @@ title = ""
 xPlot = ""
 w = ""
 yPlot = ""
+noPlot = None
 bothPlot = ""
 displayPlot = ""
 var = ""
@@ -84,9 +85,9 @@ def quit_(root):
     root.destroy()
 
   
-def update_image(image_label, list, currentFrame):
+def update_image(image_label, video, currentFrame):
    global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
-   frame = list[currentFrame]
+   frame = video[currentFrame]
    if height == 0:
        height = len(frame)
        width = len(frame[0])
@@ -108,38 +109,42 @@ def update_image(image_label, list, currentFrame):
       for j,(line,ax,background) in items:
           f.canvas.restore_region(background)
           if j == 1:
-             line.set_ydata(tracker.coords[old][0])
-             line.set_xdata(old)
+              if var.get() == 1 or var.get() == 3:
+                  line.set_ydata(tracker.coords[currentFrame][0])
+                  line.set_xdata(old)
+              if var.get() == 2:
+                  line.set_ydata(tracker.coords[currentFrame][1])
+                  line.set_xdata(old)
           if j == 2:
-             line.set_ydata(tracker.coords[old][1])
+             line.set_ydata(tracker.coords[currentFrame][1])
              line.set_xdata(old)
           ax.draw_artist(line)
           f.canvas.blit(ax.bbox)
       backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
    
-   im = cv2.cvtColor(list[currentFrame], cv2.COLOR_BGR2RGB)
+   im = cv2.cvtColor(video[currentFrame], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
    image_label.configure(image=b)
    image_label._image_cache = b  #avoid garbage collection
    root.update()
 
-def update_all(root, image_label, list):
+def update_all(root, image_label, video):
    global currentFrame, speed, bottom, xCoords, tracker, w, old
    old = currentFrame
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
        currentFrame = currentFrame + (1*speed)
-   if pause == False and currentFrame < len(list):
+   if pause == False and currentFrame < len(video):
        currentFrame += 1
        w.set(currentFrame)
-       update_image(image_label, list, currentFrame)
-       root.after(0, func=lambda: update_all(root, image_label, list))
+       update_image(image_label, video, currentFrame)
+       root.after(0, func=lambda: update_all(root, image_label, video))
        
 
 #multiprocessing image processing functions-------------------------------------
-def image_capture(list):
+def image_capture(video):
    global tempdir
    vidFile = cv2.VideoCapture(tempdir)
    while True:
@@ -147,14 +152,14 @@ def image_capture(list):
          flag, frame=vidFile.read()
          if flag==0:
              break
-         list.append(frame)
+         video.append(frame)
       except:
          continue
 
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
-    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,currentFrame, image_label
+    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,video,currentFrame, image_label
     #get only left mouse click
     x=event.x
     y=event.y
@@ -175,7 +180,7 @@ def on_mouse(event):
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             tracker.lastFrameWith = currentFrame
             #return to normal state
-            playVideo(root,image_label,list)
+            playVideo(root,image_label,video)
             center = outside = None
             bottom.config(text='')
         #if first click (center)
@@ -184,19 +189,19 @@ def on_mouse(event):
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             bottom.config(text='Click on the outside of the circle')
                  
-def playVideo(root, image_label, list):
+def playVideo(root, image_label, video):
     global pause
     pause = False
-    update_all(root, image_label, list)
+    update_all(root, image_label, video)
     
 def pauseVideo():
     global pause
     pause = True
     
-def updateCurrentFrame(image_label, list):
+def updateCurrentFrame(image_label, video):
     global currentFrame
     currentFrame = w.get()
-    update_image(image_label, list, currentFrame)
+    update_image(image_label, video, currentFrame)
     
 def slowDown():
     global speed
@@ -241,16 +246,19 @@ def reset():
     yLine = 0
 
     tracker = CircleTracker()
-    update_all(root,image_label,list)
+    update_all(root,image_label,video)
 
 def submitData():
-    global size, bottom, input, information, submit,xPlot,yPlot,bothPlot,displayPlot
+    global size, bottom, input, information, submit,xPlot,yPlot,bothPlot,noPlot,displayPlot
     size = float(input.get())
     information.destroy()
     input.destroy()
     submit.destroy()
     
     holder = Frame(master=root)
+    
+    noPlot = Radiobutton(master=holder, text="No Live Plots", variable=var, value=0)
+    noPlot.pack(side="left")
     
     xPlot = Radiobutton(master=holder, text="X Axis", variable=var, value=1)
     xPlot.pack(side="left")
@@ -261,54 +269,57 @@ def submitData():
     bothPlot = Radiobutton(master=holder, text="Both Axis", variable=var, value=3)
     bothPlot.pack(side="left")
    
-    displayPlot = Button(master=holder, text="Plot", command=displayChoice)
+    displayPlot = Button(master=holder, text="Submit", command=displayChoice)
     displayPlot.pack(side="left")
     holder.grid(row=3, column=1, columnspan=4)
     
 def displayChoice():
-    global plot, f, yPlot, xPlot, bothPlot, displayPlot, var, bottom, axes, backgrounds, canvas, lines,old
+    global plot, f, yPlot, xPlot, bothPlot, displayPlot, var, bottom, axes, backgrounds, canvas, lines,old,noPlot
     xPlot.destroy()
     yPlot.destroy()
     bothPlot.destroy()
+    noPlot.destroy()
     displayPlot.destroy()
+    if var.get() == 0:
+        pass
+    else:
+        plot = True
+        axes = []
+        f = Figure(figsize=(5,5), dpi=100)
     
-    plot = True
-    axes = []
-    f = Figure(figsize=(5,5), dpi=100)
+        if var.get()==1:
+            axis = f.add_subplot(111)
+            axis.set_xlim([0,len(video)])
+            axis.set_ylim([0,width])
+            axes +=[axis]
+        elif var.get() == 2:
+            axis = f.add_subplot(111)
+            axis.set_xlim([0,len(video)])
+            axis.set_ylim([0,height])
+            axes +=[axis]
+        elif var.get() == 3:
+            f = Figure(figsize=(10,5), dpi=100)
+            axis = f.add_subplot(121)
+            axis.set_xlim([0,len(video)])
+            axis.set_ylim([0,width])
+            axes +=[axis]
+            axis = f.add_subplot(122)
+            axis.set_xlim([0,len(video)])
+            axis.set_ylim([0,height])
+            axes +=[axis]
+	   
+        canvas = FigureCanvasTkAgg(f, master=root)
+        canvas.show()
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
     
-    if var.get()==1:
-        axis = f.add_subplot(111)
-        axis.set_xlim([0,len(list)])
-        axis.set_ylim([0,width])
-        axes +=[axis]
-    elif var.get() == 2:
-        axis = f.add_subplot(111)
-        axis.set_xlim([0,len(list)])
-        axis.set_ylim([0,height])
-        axes +=[axis]
-    elif var.get() == 3:
-        f = Figure(figsize=(10,5), dpi=100)
-        axis = f.add_subplot(121)
-        axis.set_xlim([0,len(list)])
-        axis.set_ylim([0,width])
-        axes +=[axis]
-        axis = f.add_subplot(122)
-        axis.set_xlim([0,len(list)])
-        axis.set_ylim([0,height])
-        axes +=[axis]
-   
-    canvas = FigureCanvasTkAgg(f, master=root)
-    canvas.show()
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
-    
-    if var.get() == 1:
-        lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
-    elif var.get() == 2:
-        lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
-    elif var.get() == 3:
-        lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
-    backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
+        if var.get() == 1:
+            lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
+        elif var.get() == 2:
+            lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
+        elif var.get() == 3:
+            lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
+        backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
 
 
     # pause button
@@ -316,7 +327,7 @@ def displayChoice():
     pauseButton.grid(row=2, column=0)
    
     #play button
-    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, list))
+    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
     playButton.grid(row=2, column=1)
    
     #slow down
@@ -372,14 +383,14 @@ def open():
    var = IntVar()
    image_label = Label(master=root) #label for the video frame
    image_label.grid(row=0, column=0, columnspan=4)
-   p = image_capture(list)
+   p = image_capture(video)
    image_label.bind('<Button-1>',on_mouse)
    
-   size = len(list)
-   update_image(image_label, list, 0)
+   size = len(video)
+   update_image(image_label, video, 0)
    slider_width = image_label.winfo_width()
    w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
-   w.bind("<ButtonRelease-1>", lambda event: updateCurrentFrame(image_label, list))
+   w.bind("<ButtonRelease-1>", lambda event: updateCurrentFrame(image_label, video))
    w.grid(row=1, column=0, columnspan=4)
 
    information = Label(master=root, text="Enter the size of the object (cm): ")
@@ -398,12 +409,12 @@ def open():
    reset.grid(row = 4, column = 2)
    
    # setup the update callback
-   root.after(0, func=lambda: update_all(root, image_label, list))    
+   root.after(0, func=lambda: update_all(root, image_label, video))    
   
 if __name__ == '__main__':
    root = Tk()
    root.withdraw() #use to hide tkinter window
-   list = list()
+   video = list()
    root = Toplevel()
    root.wm_title("Object Tracker")
 
