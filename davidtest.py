@@ -29,7 +29,7 @@ reset = ""
 height = 0
 width = 0
 radio = 0
-count = 1
+currentFrame = 1
 size = 120
 speed = 0
 plot = False
@@ -40,9 +40,7 @@ tCoords = []
 size_pixel = 0
 r_pixel = 0
 var  = 0
-f = ""
-xAxis = ""
-yAxis = ""
+f = None
 fps = 123
 xdistance_cm = 0
 xdistance_in = 0
@@ -54,8 +52,6 @@ first = None
 bottom = ''
 frame = ''
 pause = True
-xLine = 0
-yLine = 0
 input = ""
 tempdir = ""
 title = ""
@@ -68,6 +64,11 @@ var = ""
 information  = ""
 submit = ""
 image_label = ""
+backgrounds = []
+axes = []
+lines = []
+canvas = None
+old = 0
 
 tracker = CircleTracker()
 
@@ -83,39 +84,40 @@ def quit_(root):
     root.destroy()
 
   
-def update_image(image_label, list, count):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var
-   frame = list[count]
+def update_image(image_label, list, currentFrame):
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
+   frame = list[currentFrame]
    if height == 0:
        height = len(frame)
        width = len(frame[0])
    
    #if we already have the frame in memory then use circles that were found
-   if count in tracker.coords.keys():
-       x,y,r = tracker.coords[count]
+   if currentFrame in tracker.coords.keys():
+       x,y,r = tracker.coords[currentFrame]
    
    #find new circles if new frame and not paused
    elif not pause:
-       frame,lost = tracker.find(frame,count,pause)
+       frame,lost = tracker.find(frame,currentFrame,pause)
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
    
    """Plots motion in matplotlib"""
    if plot:
-      #plot the data
-      
-      if var.get() == 1 or var.get()==3:
-          xLine, = xAxis.plot(tracker.getTCoords(),tracker.getXCoords(),'ro')
-          xAxis.draw_artist(xAxis.patch)
-          xAxis.draw_artist(xLine)
-      if var.get() == 2 or var.get()==3:
-          yLine, = yAxis.plot(tracker.getTCoords(),tracker.getYCoords(),'ro')
-          yAxis.draw_artist(yAxis.patch)
-          yAxis.draw_artist(yLine)
-      f.canvas.draw()
+      items = enumerate(zip(lines,axes,backgrounds),start = 1)
+      for j,(line,ax,background) in items:
+          f.canvas.restore_region(background)
+          if j == 1:
+             line.set_ydata(tracker.coords[old][0])
+             line.set_xdata(old)
+          if j == 2:
+             line.set_ydata(tracker.coords[old][1])
+             line.set_xdata(old)
+          ax.draw_artist(line)
+          f.canvas.blit(ax.bbox)
+      backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
    
-   im = cv2.cvtColor(list[count], cv2.COLOR_BGR2RGB)
+   im = cv2.cvtColor(list[currentFrame], cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
    image_label.configure(image=b)
@@ -123,15 +125,16 @@ def update_image(image_label, list, count):
    root.update()
 
 def update_all(root, image_label, list):
-   global count, speed, bottom, xCoords, tracker, w
+   global currentFrame, speed, bottom, xCoords, tracker, w, old
+   old = currentFrame
    if speed < 0:
        time.sleep((speed*.1)*-1) 
    elif speed > 0:
-       count = count + (1*speed)
-   if pause == False and count < len(list):
-       count += 1
-       w.set(count)
-       update_image(image_label, list, count)
+       currentFrame = currentFrame + (1*speed)
+   if pause == False and currentFrame < len(list):
+       currentFrame += 1
+       w.set(currentFrame)
+       update_image(image_label, list, currentFrame)
        root.after(0, func=lambda: update_all(root, image_label, list))
        
 
@@ -151,7 +154,7 @@ def image_capture(list):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
-    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,count, image_label
+    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,list,currentFrame, image_label
     #get only left mouse click
     x=event.x
     y=event.y
@@ -162,15 +165,15 @@ def on_mouse(event):
         if center is not None:
             outside = (x,y)
             if first is None:
-                first = (center[0],center[1],distance(center,outside),count)
+                first = (center[0],center[1],distance(center,outside),currentFrame)
             
             
             x,y = center
             r = distance(center,outside)
-            tracker.insert(x,y,r,count)
+            tracker.insert(x,y,r,currentFrame)
             cv2.circle(frame, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            tracker.lastFrameWith = count
+            tracker.lastFrameWith = currentFrame
             #return to normal state
             playVideo(root,image_label,list)
             center = outside = None
@@ -190,10 +193,10 @@ def pauseVideo():
     global pause
     pause = True
     
-def updateCount(image_label, list):
-    global count
-    count = w.get()
-    update_image(image_label, list, count)
+def updateCurrentFrame(image_label, list):
+    global currentFrame
+    currentFrame = w.get()
+    update_image(image_label, list, currentFrame)
     
 def slowDown():
     global speed
@@ -204,12 +207,12 @@ def fastForward():
     speed += 1
 
 def reset():
-    global radio,count,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+    global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
 
 
 
     radio = 0
-    count = 1
+    currentFrame = 1
     size = 120
     speed = 0
     plot = False
@@ -263,34 +266,50 @@ def submitData():
     holder.grid(row=3, column=1, columnspan=4)
     
 def displayChoice():
-    global plot, f, xAxis, yAxis, yPlot, xPlot, bothPlot, displayPlot, var, bottom
-    plot = True
+    global plot, f, yPlot, xPlot, bothPlot, displayPlot, var, bottom, axes, backgrounds, canvas, lines,old
     xPlot.destroy()
     yPlot.destroy()
     bothPlot.destroy()
     displayPlot.destroy()
+    
+    plot = True
+    axes = []
     f = Figure(figsize=(5,5), dpi=100)
     
     if var.get()==1:
-        xAxis = f.add_subplot(111)
-        xAxis.set_xlim([0,len(list)])
-        xAxis.set_ylim([0,width])
+        axis = f.add_subplot(111)
+        axis.set_xlim([0,len(list)])
+        axis.set_ylim([0,width])
+        axes +=[axis]
     elif var.get() == 2:
-        yAxis = f.add_subplot(111)
-        yAxis.set_xlim([0,len(list)])
-        yAxis.set_ylim([0,height])
+        axis = f.add_subplot(111)
+        axis.set_xlim([0,len(list)])
+        axis.set_ylim([0,height])
+        axes +=[axis]
     elif var.get() == 3:
         f = Figure(figsize=(10,5), dpi=100)
-        xAxis = f.add_subplot(121)
-        xAxis.set_xlim([0,len(list)])
-        xAxis.set_ylim([0,width])
-        yAxis = f.add_subplot(122)
-        yAxis.set_xlim([0,len(list)])
-        yAxis.set_ylim([0,height])
+        axis = f.add_subplot(121)
+        axis.set_xlim([0,len(list)])
+        axis.set_ylim([0,width])
+        axes +=[axis]
+        axis = f.add_subplot(122)
+        axis.set_xlim([0,len(list)])
+        axis.set_ylim([0,height])
+        axes +=[axis]
    
     canvas = FigureCanvasTkAgg(f, master=root)
     canvas.show()
+    canvas.draw()
     canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
+    
+    if var.get() == 1:
+        lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
+    elif var.get() == 2:
+        lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
+    elif var.get() == 3:
+        lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
+    backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
+
 
     # pause button
     pauseButton = Button(master=root, text="Pause", command=pauseVideo)
@@ -326,16 +345,16 @@ def exportData():
     worksheet.write(0, 1, 'Y Axis')
        
     xCoords = tracker.getXCoords()
-    count = 1
+    currentFrame = 1
     for x in xCoords:
-        worksheet.write(count, 0, x)
-        count += 1
+        worksheet.write(currentFrame, 0, x)
+        currentFrame += 1
        
-    count = 1
+    currentFrame = 1
     yCoords = tracker.getYCoords()
     for y in yCoords:
-       worksheet.write(count, 1, y)
-       count += 1
+       worksheet.write(currentFrame, 1, y)
+       currentFrame += 1
    
     file_name = tkFileDialog.asksaveasfile(mode='w', defaultextension=".xls")
     print file_name
@@ -360,7 +379,7 @@ def open():
    update_image(image_label, list, 0)
    slider_width = image_label.winfo_width()
    w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
-   w.bind("<ButtonRelease-1>", lambda event: updateCount(image_label, list))
+   w.bind("<ButtonRelease-1>", lambda event: updateCurrentFrame(image_label, list))
    w.grid(row=1, column=0, columnspan=4)
 
    information = Label(master=root, text="Enter the size of the object (cm): ")
