@@ -283,29 +283,44 @@ def displayChoice():
  
   
 def exportData():
-    global xCoords, yCoords, tracker
-    xCoords = tracker.getXCoords
-    yCoords = tracker.getYCoords
+    global xCoords, yCoords, tracker, size
     workbook = xlwt.Workbook()
     worksheet = workbook.add_sheet('Data')
-    worksheet.write(0, 0, 'X Axis')
-    worksheet.write(0, 1, 'Y Axis')
-       
+    worksheet.write(0, 0, 'Frame')
+    worksheet.write(0, 1, 'X Axis')
+    worksheet.write(0, 2, 'Y Axis')
+    worksheet.write(0, 3, 'Radius')
+    worksheet.write(0, 5, 'Size of Object: ' + str(size))
+     
+     
+    frames = tracker.getTCoords()
+    count = 1
+    for f in frames:
+        worksheet.write(count, 0, f)
+        count += 1
+          
     xCoords = tracker.getXCoords()
     count = 1
     for x in xCoords:
-        worksheet.write(count, 0, x)
+        worksheet.write(count, 1, x)
         count += 1
        
     count = 1
     yCoords = tracker.getYCoords()
     for y in yCoords:
-       worksheet.write(count, 1, y)
+       worksheet.write(count, 2, y)
        count += 1
-   
-    file_name = tkFileDialog.asksaveasfile(mode='w', defaultextension=".xls")
-    print file_name
-    workbook.save('array.xls')  #this wasnt working
+        
+    count = 1
+    rCoords = tracker.getRCoords()
+    for r in rCoords:
+        worksheet.write(count, 3, r)
+        count += 1
+        
+    
+    
+    file_name = tkFileDialog.asksaveasfile(mode='a', defaultextension=".xls")
+    workbook.save(file_name.name)  
 
 def open():
    global tempdir, title, xPlot, yPlot, bothPlot, displayPlot, var, input, reset, information, submit, image_label, w
