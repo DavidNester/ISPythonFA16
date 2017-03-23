@@ -55,4 +55,28 @@ class Tracker:
     def yMin(self):
         return min(self.yCoords)
 
+    def xVelocity(self):
+        return _SimpleVelocity(self.xCoords)
 
+    def yVelocity(self):
+        return _SimpleVelocity(self.yCoords)
+
+    def _SimpleVelocity(self,coords):
+        vel = []
+        if len(coords) > 3:
+            for i in range(1,len(coords)-1):
+                vel += [(coords[i+1]-coords[i-1])/(self.tCoords[i+1]-self.tCoords[i-1])]
+        return vel
+
+    def xAcceleration(self):
+        return _SimpleAcceleration(_SimpleVelocity(self.xCoords))
+
+    def xAcceleration(self):
+        return _SimpleAcceleration(_SimpleVelocity(self.yCoords))
+
+    def _SimpleAcceleration(self,vel):
+        acc = []
+        if len(vel) > 3:
+            for i in range(1,len(vel)-1):
+                acc += [(vel[i+1]-vel[i-1])/(self.tCoords[i+2]-self.tCoords[i])]
+        return acc
