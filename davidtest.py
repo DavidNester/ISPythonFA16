@@ -49,12 +49,12 @@ ydistance_in = 0
 center = None
 outside = None
 first = None
-bottom = ''
-frame = ''
+bottom = None
+frame = None
 pause = True
-input = ""
-tempdir = ""
-title = ""
+input = None
+tempdir = None
+title = None
 xPlot = ""
 w = ""
 yPlot = ""
@@ -87,6 +87,7 @@ def quit_(root):
   
 def update_image(image_label, video, currentFrame):
    global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
+   print currentFrame
    frame = video[currentFrame]
    if height == 0:
        height = len(frame)
@@ -97,26 +98,27 @@ def update_image(image_label, video, currentFrame):
        x,y,r = tracker.coords[currentFrame]
    
    #find new circles if new frame and not paused
-   elif not pause:
+   elif not pause and first is not None:
        frame,lost = tracker.find(frame,currentFrame,pause)
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
    
    """Plots motion in matplotlib"""
-   if plot:
+   if plot and first is not None:
       items = enumerate(zip(lines,axes,backgrounds),start = 1)
       for j,(line,ax,background) in items:
           f.canvas.restore_region(background)
+          
           if j == 1:
               if var.get() == 1 or var.get() == 3:
-                  line.set_ydata(tracker.coords[currentFrame][0])
+                  line.set_ydata(tracker.coords[old][0])
                   line.set_xdata(old)
               if var.get() == 2:
-                  line.set_ydata(tracker.coords[currentFrame][1])
+                  line.set_ydata(tracker.coords[old][1])
                   line.set_xdata(old)
           if j == 2:
-             line.set_ydata(tracker.coords[currentFrame][1])
+             line.set_ydata(tracker.coords[old][1])
              line.set_xdata(old)
           ax.draw_artist(line)
           f.canvas.blit(ax.bbox)
@@ -183,6 +185,27 @@ def on_mouse(event):
             playVideo(root,image_label,video)
             center = outside = None
             bottom.config(text='')
+            # pause button
+            pauseButton = Button(master=root, text="Pause", command=pauseVideo)
+            pauseButton.grid(row=2, column=0)
+
+            #play button
+            playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
+            playButton.grid(row=2, column=1)
+    
+            #slow down
+            slowButton = Button(master=root, text='Slow Down', command=slowDown)
+            slowButton.grid(row=2, column=2)
+    
+            #fast forward
+            fastButton = Button(master=root, text='Speed Up', command=fastForward)
+            fastButton.grid(row=2, column=3)
+    
+            #export button
+            export = Button(master=root, text='Export', command= lambda: exportData())
+            export.grid(row = 4, column = 1)
+        
+
         #if first click (center)
         else:
             center = (x,y)
@@ -270,7 +293,7 @@ def submitData():
     bothPlot.pack(side="left")
    
     displayPlot = Button(master=holder, text="Submit", command=displayChoice)
-    displayPlot.pack(side="left")
+    displayPlot.pack(side="bottom", fill = "x")
     holder.grid(row=3, column=1, columnspan=4)
     
 def displayChoice():
@@ -321,25 +344,6 @@ def displayChoice():
             lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
         backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
 
-
-    # pause button
-    pauseButton = Button(master=root, text="Pause", command=pauseVideo)
-    pauseButton.grid(row=2, column=0)
-   
-    #play button
-    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
-    playButton.grid(row=2, column=1)
-   
-    #slow down
-    slowButton = Button(master=root, text='Slow Down', command=slowDown)
-    slowButton.grid(row=2, column=2)
-   
-    #fast forward
-    fastButton = Button(master=root, text='Speed Up', command=fastForward)
-    fastButton.grid(row=2, column=3)
-
-    export = Button(master=root, text='Export', command= lambda: exportData())
-    export.grid(row = 4, column = 1)
 
     bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
     bottom.grid(row=3, column=0, columnspan=4)

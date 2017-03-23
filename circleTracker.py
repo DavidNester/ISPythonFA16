@@ -35,7 +35,7 @@ class CircleTracker(Tracker):
                 if alpha <= 30:
                     found = True
         #if we havent found a circle in more than 10 frames then ask the user for help
-        if currentFrame-self.lastFrameWith > 10:
+        if abs(currentFrame-self.lastFrameWith) > 10:
                 lost = True
         return frame, lost
 
