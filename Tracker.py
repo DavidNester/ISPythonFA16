@@ -54,6 +54,10 @@ class Tracker:
       
     def yMin(self):
         return min(self.yCoords)
+    
+    def getRadius(self):
+        #we probably want to check how spread out the range is
+        return sum(self.rCoords)/len(self.rCoords)
 
     def xVelocity(self):
         return _SimpleVelocity(self.xCoords)

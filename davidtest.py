@@ -30,7 +30,7 @@ height = 0
 width = 0
 radio = 0
 currentFrame = 1
-size = 120
+size = 0
 speed = 0
 plot = False
 xCoords = []
@@ -351,39 +351,48 @@ def displayChoice():
 
   
 def exportData():
-    global xCoords, yCoords, tracker, size
+    global xCoords, yCoords, tracker, size, xdistance_cm,xdistance_in,ydistance_cm,ydistance_in
     workbook = xlwt.Workbook()
     worksheet = workbook.add_sheet('Data')
     worksheet.write(0, 0, 'Frame')
     worksheet.write(0, 1, 'X Axis')
     worksheet.write(0, 2, 'Y Axis')
     worksheet.write(0, 3, 'Radius')
-    worksheet.write(0, 5, 'Size of Object: ' + str(size))
+    worksheet.write(0, 5, 'Size of Object: ' + str(size) + 'cm')
+    
+    #centimeters / pixel
+    centConversion = (size*1.0)/(tracker.getRadius()*1.0)
+    
+    xdistance_cm = (tracker.xMax() - tracker.xMin()) * centConversion
+    ydistance_cm = (tracker.yMax() - tracker.yMin()) * centConversion
+    
+    xdistance_in = xdistance_cm/2.54#could be more exact in the future
+    xdistance_in = xdistance_cm/2.54#could be more exact in the future
      
      
     frames = tracker.getTCoords()
-    currentFrame = 1
+    count = 1
     for f in frames:
-        worksheet.write(currentFrame, 0, f)
-        currentFrame += 1
+        worksheet.write(count, 0, f)
+        count += 1
           
     xCoords = tracker.getXCoords()
-    currentFrame = 1
+    count = 1
     for x in xCoords:
-        worksheet.write(currentFrame, 1, x)
-        currentFrame += 1
+        worksheet.write(count, 1, x)
+        count += 1
        
-    currentFrame = 1
+    count = 1
     yCoords = tracker.getYCoords()
     for y in yCoords:
-       worksheet.write(currentFrame, 2, y)
-       currentFrame += 1
+       worksheet.write(count, 2, y)
+       count += 1
         
-    currentFrame = 1
+    count = 1
     rCoords = tracker.getRCoords()
     for r in rCoords:
-        worksheet.write(currentFrame, 3, r)
-        currentFrame += 1
+        worksheet.write(count, 3, r)
+        count += 1
         
     
     
