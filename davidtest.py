@@ -87,8 +87,9 @@ def quit_(root):
   
 def update_image(image_label, video, currentFrame):
    global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
-   print currentFrame
    frame = video[currentFrame]
+   x = None
+   y = None
    if height == 0:
        height = len(frame)
        width = len(frame[0])
@@ -99,32 +100,32 @@ def update_image(image_label, video, currentFrame):
    
    #find new circles if new frame and not paused
    elif not pause and first is not None:
-       frame,lost = tracker.find(frame,currentFrame,pause)
+       frame,lost,x,y = tracker.find(frame,currentFrame,pause)
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
    
    """Plots motion in matplotlib"""
-   if plot and first is not None:
+   if plot and first is not None and x is not None:
       items = enumerate(zip(lines,axes,backgrounds),start = 1)
       for j,(line,ax,background) in items:
           f.canvas.restore_region(background)
           
           if j == 1:
               if var.get() == 1 or var.get() == 3:
-                  line.set_ydata(tracker.coords[old][0])
+                  line.set_ydata(x)
                   line.set_xdata(old)
               if var.get() == 2:
-                  line.set_ydata(tracker.coords[old][1])
+                  line.set_ydata(y)
                   line.set_xdata(old)
           if j == 2:
-             line.set_ydata(tracker.coords[old][1])
+             line.set_ydata(y)
              line.set_xdata(old)
           ax.draw_artist(line)
           f.canvas.blit(ax.bbox)
       backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
    
-   im = cv2.cvtColor(video[currentFrame], cv2.COLOR_BGR2RGB)
+   im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
    image_label.configure(image=b)
@@ -171,6 +172,8 @@ def on_mouse(event):
         #if second click (outside)
         if center is not None:
             outside = (x,y)
+            if var.get() != 0:
+                plot = True
             if first is None:
                 first = (center[0],center[1],distance(center,outside),currentFrame)
             
@@ -303,46 +306,42 @@ def displayChoice():
     bothPlot.destroy()
     noPlot.destroy()
     displayPlot.destroy()
-    if var.get() == 0:
-        pass
-    else:
-        plot = True
-        axes = []
-        f = Figure(figsize=(5,5), dpi=100)
-    
-        if var.get()==1:
-            axis = f.add_subplot(111)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,width])
-            axes +=[axis]
-        elif var.get() == 2:
-            axis = f.add_subplot(111)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,height])
-            axes +=[axis]
-        elif var.get() == 3:
-            f = Figure(figsize=(10,5), dpi=100)
-            axis = f.add_subplot(121)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,width])
-            axes +=[axis]
-            axis = f.add_subplot(122)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,height])
-            axes +=[axis]
-       
-        canvas = FigureCanvasTkAgg(f, master=root)
-        canvas.show()
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
-    
-        if var.get() == 1:
-            lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
-        elif var.get() == 2:
-            lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
-        elif var.get() == 3:
-            lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
-        backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
+    axes = []
+    f = Figure(figsize=(5,5), dpi=100)
+
+    if var.get()==1:
+        axis = f.add_subplot(111)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,width])
+        axes +=[axis]
+    elif var.get() == 2:
+        axis = f.add_subplot(111)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,height])
+        axes +=[axis]
+    elif var.get() == 3:
+        f = Figure(figsize=(10,5), dpi=100)
+        axis = f.add_subplot(121)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,width])
+        axes +=[axis]
+        axis = f.add_subplot(122)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,height])
+        axes +=[axis]
+   
+    canvas = FigureCanvasTkAgg(f, master=root)
+    canvas.show()
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
+
+    if var.get() == 1:
+        lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
+    elif var.get() == 2:
+        lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
+    elif var.get() == 3:
+        lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
+    backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
 
 
     bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
@@ -399,6 +398,13 @@ def exportData():
     file_name = tkFileDialog.asksaveasfile(mode='a', defaultextension=".xls")
     workbook.save(file_name.name)
 
+def moved():
+    global bottom
+    if w.get() not in tracker.coords.keys():
+        pauseVideo()
+        bottom.config(text='Click on the center of the circle')
+    updateCurrentFrame(image_label,video)
+
 def open():
    global tempdir, title, xPlot, yPlot, bothPlot, displayPlot, var, input, reset, information, submit, image_label, w
    openButton.destroy()
@@ -418,7 +424,7 @@ def open():
    update_image(image_label, video, 0)
    slider_width = image_label.winfo_width()
    w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
-   w.bind("<ButtonRelease-1>", lambda event: updateCurrentFrame(image_label, video))
+   w.bind("<ButtonRelease-1>", lambda event: moved())
    w.grid(row=1, column=0, columnspan=4)
 
    information = Label(master=root, text="Enter the size of the object (cm): ")
