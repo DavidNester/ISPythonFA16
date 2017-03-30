@@ -59,11 +59,12 @@ class Tracker:
         #we probably want to check how spread out the range is
         return sum(self.rCoords)/len(self.rCoords)
 
+    """Must return tCoords as well because it cuts one off on either end"""
     def xVelocity(self):
-        return _SimpleVelocity(self.xCoords)
+        return self.tCoords[1:len(self.tCoords)-1],self._SimpleVelocity(self.xCoords)
 
     def yVelocity(self):
-        return _SimpleVelocity(self.yCoords)
+        return self.tCoords[1:len(self.tCoords)-1],self._SimpleVelocity(self.yCoords)
 
     def _SimpleVelocity(self,coords):
         vel = []
@@ -72,11 +73,12 @@ class Tracker:
                 vel += [(coords[i+1]-coords[i-1])/(self.tCoords[i+1]-self.tCoords[i-1])]
         return vel
 
+    """Must return tCoords as well because it cuts one off on either end"""
     def xAcceleration(self):
-        return _SimpleAcceleration(_SimpleVelocity(self.xCoords))
+        return self.tCoords[2:len(self.tCoords)-2],self._SimpleAcceleration(self._SimpleVelocity(self.xCoords))
 
-    def xAcceleration(self):
-        return _SimpleAcceleration(_SimpleVelocity(self.yCoords))
+    def yAcceleration(self):
+        return self.tCoords[2:len(self.tCoords)-2],self._SimpleAcceleration(self._SimpleVelocity(self.yCoords))
 
     def _SimpleAcceleration(self,vel):
         acc = []

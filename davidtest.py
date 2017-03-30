@@ -207,7 +207,11 @@ def on_mouse(event):
             #export button
             export = Button(master=root, text='Export', command= lambda: exportData())
             export.grid(row = 4, column = 1)
-        
+    
+            #interactive data mode button
+            dataButton = Button(master=root, text='Data Mode', command=interactiveDataMode)
+            dataButton.grid(row = 4, column = 0)
+    
 
         #if first click (center)
         else:
@@ -445,6 +449,58 @@ def open():
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, video))    
   
+def interactiveDataMode():
+    #global image_label, pauseButton, playButton, fastButton, slowButton, end, reset, w
+    data = Tk()
+    data.withdraw()
+    data = Toplevel()
+
+    xButton = Button(master=data,text='x', command = xData )
+    xButton.grid(row=0, column=0, columnspan=2)
+    
+    yButton = Button(master=data,text='y', command = yData )
+    yButton.grid(row=1, column=0, columnspan=2)
+    
+    rButton = Button(master=data,text='r', command = rData )
+    rButton.grid(row=2, column=0, columnspan=2)
+
+    xVelButton = Button(master=data,text='x Velocity', command = xVelData )
+    xVelButton.grid(row=3, column=0, columnspan=2)
+
+    yVelButton = Button(master=data,text='y Velocity', command = yVelData )
+    yVelButton.grid(row=4, column=0, columnspan=2)
+
+    xAccButton = Button(master=data,text='x Acceleration', command = xAccData )
+    xAccButton.grid(row=5, column=0, columnspan=2)
+
+    yAccButton = Button(master=data,text='y Acceleration', command = yAccData )
+    yAccButton.grid(row=6, column=0, columnspan=2)
+
+def plotData(x,y,num):
+    plt.figure(num)
+    plt.plot(x,y,'ro')
+    plt.show()
+
+def xData():
+    plotData(tracker.getTCoords(),tracker.getXCoords(),1)
+def yData():
+    plotData(tracker.getTCoords(),tracker.getYCoords(),2)
+def rData():
+    plotData(tracker.getTCoords(),tracker.getRCoords(),3)
+def xVelData():
+    x,y = tracker.xVelocity()
+    plotData(x,y,4)
+def yVelData():
+    x,y = tracker.yVelocity()
+    plotData(x,y,5)
+def xAccData():
+    x,y = tracker.xAcceleration()
+    plotData(x,y,6)
+def yAccData():
+    x,y = tracker.yAcceleration()
+    plotData(x,y,7)
+
+
 if __name__ == '__main__':
    root = Tk()
    root.withdraw() #use to hide tkinter window
@@ -465,18 +521,3 @@ if __name__ == '__main__':
    mainloop()
 
 
-"""master = Tk()
-master = Toplevel()
-master.wm_title("Object Tracker")
-resultx = StringVar()
-resulty = StringVar()
-xdistance_cm = tracker.xMax() - tracker.xMin()
-ydistance_cm = tracker.yMax() - tracker.yMin()
-#dont forget radius (avg(rCoords))
-responsex = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
-responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
-resultx.set(responsex)
-resulty.set(responsey)
-Label(master, textvariable=resultx).grid(row=0)
-Label(master, textvariable=resulty).grid(row=1)
-mainloop()"""
