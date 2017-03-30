@@ -70,7 +70,7 @@ class Tracker:
         vel = []
         if len(coords) > 3:
             for i in range(1,len(coords)-1):
-                vel += [(coords[i+1]-coords[i-1])/(self.tCoords[i+1]-self.tCoords[i-1])]
+                vel += [((coords[i+1]-coords[i-1])*1.0)/(self.tCoords[i+1]-self.tCoords[i-1])]
         return vel
 
     """Must return tCoords as well because it cuts one off on either end"""
@@ -84,5 +84,5 @@ class Tracker:
         acc = []
         if len(vel) > 3:
             for i in range(1,len(vel)-1):
-                acc += [(vel[i+1]-vel[i-1])/(self.tCoords[i+2]-self.tCoords[i])]
+                acc += [((vel[i+1]-vel[i-1])*1.0)/(self.tCoords[i+2]-self.tCoords[i])]
         return acc
