@@ -86,7 +86,7 @@ def quit_(root):
 
   
 def update_image(image_label, video, currentFrame):
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes, bottom
    frame = video[currentFrame]
    x = None
    y = None
