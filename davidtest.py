@@ -29,6 +29,7 @@ from matplotlib.figure import Figure
 from circleTracker import CircleTracker
 from colorTracker import ColorTracker
 
+
 reset = ""
 e1 = ""
 height = 0
@@ -37,12 +38,23 @@ radio = 0
 currentFrame = 1
 type = ""
 size = 120
+
+currentFrame = 1
+
+reset = None
+height = 0
+width = 0
+radio = 0
+size = 0
+
 speed = 0
 plot = False
+
 xCoords = []
 yCoords = []
 rCoords = []
 tCoords = []
+
 size_pixel = 0
 r_pixel = 0
 var  = 0
@@ -55,25 +67,32 @@ selection = 0
 xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
+
 center = None
 outside = None
 first = None
-bottom = ''
-frame = ''
+
+bottom = None
+frame = None
 pause = True
-input = ""
-tempdir = ""
-title = ""
-xPlot = ""
+input = None
+tempdir = None
+title = None
+
 w = ""
-yPlot = ""
+
+xPlot = None
+yPlot = None
 noPlot = None
-bothPlot = ""
-displayPlot = ""
-var = ""
-information  = ""
-submit = ""
-image_label = ""
+bothPlot = None
+displayPlot = None
+var = None
+
+information  = None
+submit = None
+
+image_label = None
+
 backgrounds = []
 axes = []
 lines = []
@@ -96,8 +115,14 @@ def quit_(root):
 
   
 def update_image(image_label, video, currentFrame):
+
    global tracker, color_tracker, pause, plot, selection, upper_threshold, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
+
+   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes, bottom
+
    frame = video[currentFrame]
+   x = None
+   y = None
    if height == 0:
        height = len(frame)
        width = len(frame[0])
@@ -107,36 +132,42 @@ def update_image(image_label, video, currentFrame):
        x,y,r = tracker.coords[currentFrame]
    
    #find new circles if new frame and not paused
+
    elif not pause:
        if selection == 0:
            frame,lost = tracker.find(frame,currentFrame,pause)
        elif selection == 1:
             frame,lost = color_tracker.findColor(frame, upper_threshold)
             
+
+   elif not pause and first is not None:
+       frame,lost,x,y = tracker.find(frame,currentFrame,pause)
+
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
    
    """Plots motion in matplotlib"""
-   if plot:
+   if plot and first is not None and x is not None:
       items = enumerate(zip(lines,axes,backgrounds),start = 1)
       for j,(line,ax,background) in items:
           f.canvas.restore_region(background)
+          
           if j == 1:
               if var.get() == 1 or var.get() == 3:
-                  line.set_ydata(tracker.coords[currentFrame][0])
+                  line.set_ydata(x)
                   line.set_xdata(old)
               if var.get() == 2:
-                  line.set_ydata(tracker.coords[currentFrame][1])
+                  line.set_ydata(y)
                   line.set_xdata(old)
           if j == 2:
-             line.set_ydata(tracker.coords[currentFrame][1])
+             line.set_ydata(y)
              line.set_xdata(old)
           ax.draw_artist(line)
           f.canvas.blit(ax.bbox)
       backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
    
-   im = cv2.cvtColor(video[currentFrame], cv2.COLOR_BGR2RGB)
+   im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
    a = Image.fromarray(im)
    b = ImageTk.PhotoImage(image=a)
    image_label.configure(image=b)
@@ -195,6 +226,8 @@ def on_mouse(event):
         #if second click (outside)
         if center is not None:
             outside = (x,y)
+            if var.get() != 0:
+                plot = True
             if first is None:
                 first = (center[0],center[1],distance(center,outside),currentFrame)
             
@@ -209,6 +242,31 @@ def on_mouse(event):
             playVideo(root,image_label,video)
             center = outside = None
             bottom.config(text='')
+            # pause button
+            pauseButton = Button(master=root, text="Pause", command=pauseVideo)
+            pauseButton.grid(row=2, column=0)
+
+            #play button
+            playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
+            playButton.grid(row=2, column=1)
+    
+            #slow down
+            slowButton = Button(master=root, text='Slow Down', command=slowDown)
+            slowButton.grid(row=2, column=2)
+    
+            #fast forward
+            fastButton = Button(master=root, text='Speed Up', command=fastForward)
+            fastButton.grid(row=2, column=3)
+    
+            #export button
+            export = Button(master=root, text='Export', command= lambda: exportData())
+            export.grid(row = 4, column = 1)
+    
+            #interactive data mode button
+            dataButton = Button(master=root, text='Data Mode', command=interactiveDataMode)
+            dataButton.grid(row = 4, column = 0)
+    
+
         #if first click (center)
         else:
             center = (x,y)
@@ -293,6 +351,12 @@ def fastForward():
 def reset():
     global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
 
+    pass
+""" Save for when window session becomes an object
+def reset():
+    global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+
+
     radio = 0
     currentFrame = 1
     size = 120
@@ -325,7 +389,7 @@ def reset():
     tracker = CircleTracker()
     color_tracker = ColorTracker()
     update_all(root,image_label,video)
-
+"""
 def submitData():
     global size, bottom, input, information, submit,xPlot,yPlot,bothPlot,noPlot,displayPlot
     size = float(input.get())
@@ -348,7 +412,7 @@ def submitData():
     bothPlot.pack(side="left")
    
     displayPlot = Button(master=holder, text="Submit", command=displayChoice)
-    displayPlot.pack(side="left")
+    displayPlot.pack(side="bottom", fill = "x")
     holder.grid(row=3, column=1, columnspan=4)
     
 def displayChoice():
@@ -358,66 +422,43 @@ def displayChoice():
     bothPlot.destroy()
     noPlot.destroy()
     displayPlot.destroy()
-    if var.get() == 0:
-        pass
-    else:
-        plot = True
-        axes = []
-        f = Figure(figsize=(5,5), dpi=100)
-    
-        if var.get()==1:
-            axis = f.add_subplot(111)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,width])
-            axes +=[axis]
-        elif var.get() == 2:
-            axis = f.add_subplot(111)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,height])
-            axes +=[axis]
-        elif var.get() == 3:
-            f = Figure(figsize=(10,5), dpi=100)
-            axis = f.add_subplot(121)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,width])
-            axes +=[axis]
-            axis = f.add_subplot(122)
-            axis.set_xlim([0,len(video)])
-            axis.set_ylim([0,height])
-            axes +=[axis]
-       
-        canvas = FigureCanvasTkAgg(f, master=root)
-        canvas.show()
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
-    
-        if var.get() == 1:
-            lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
-        elif var.get() == 2:
-            lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
-        elif var.get() == 3:
-            lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
-        backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
 
 
-    # pause button
-    pauseButton = Button(master=root, text="Pause", command=pauseVideo)
-    pauseButton.grid(row=2, column=0)
+    axes = []
+    f = Figure(figsize=(5,5), dpi=100)
+    if var.get()==1:
+        axis = f.add_subplot(111)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,width])
+        axes +=[axis]
+    elif var.get() == 2:
+        axis = f.add_subplot(111)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,height])
+        axes +=[axis]
+    elif var.get() == 3:
+        f = Figure(figsize=(10,5), dpi=100)
+        axis = f.add_subplot(121)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,width])
+        axes +=[axis]
+        axis = f.add_subplot(122)
+        axis.set_xlim([0,len(video)])
+        axis.set_ylim([0,height])
+        axes += [axis]
    
-    #play button
-    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
-    playButton.grid(row=2, column=1)
-   
-    #slow down
-    slowButton = Button(master=root, text='Slow Down', command=slowDown)
-    slowButton.grid(row=2, column=2)
-   
-    #fast forward
-    fastButton = Button(master=root, text='Speed Up', command=fastForward)
-    fastButton.grid(row=2, column=3)
+    canvas = FigureCanvasTkAgg(f, master=root)
+    canvas.show()
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
 
-    export = Button(master=root, text='Export', command= lambda: exportData())
-    export.grid(row = 4, column = 1)
+    if var.get() == 1:
+        lines = [axes[0].plot(tCoords,xCoords,'ro',animated=True)[0]]
+    elif var.get() == 2:
+        lines = [axes[0].plot(tCoords,yCoords,'ro',animated=True)[0]]
+    elif var.get() == 3:
+        lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
+    backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
 
     bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
     bottom.grid(row=3, column=0, columnspan=4)
@@ -425,13 +466,14 @@ def displayChoice():
 
   
 def exportData():
-    global xCoords, yCoords, tracker, size
+    global xCoords, yCoords, tracker, size, xdistance_cm,xdistance_in,ydistance_cm,ydistance_in
     workbook = xlwt.Workbook()
     worksheet = workbook.add_sheet('Data')
     worksheet.write(0, 0, 'Frame')
     worksheet.write(0, 1, 'X Axis')
     worksheet.write(0, 2, 'Y Axis')
     worksheet.write(0, 3, 'Radius')
+
     worksheet.write(0, 5, 'Size of Object: ' + str(size) + "cm")
      
      
@@ -459,10 +501,36 @@ def exportData():
         worksheet.write(currentFrame, 3, r)
         currentFrame += 1
         
+
+    worksheet.write(0, 5, 'Size of Object: ' + str(size) + 'cm')
     
+    #centimeters / pixel
+    centConversion = (size*1.0)/(tracker.getRadius()*1.0)
+    
+    xdistance_cm = (tracker.xMax() - tracker.xMin()) * centConversion
+    ydistance_cm = (tracker.yMax() - tracker.yMin()) * centConversion
+
+    
+    xdistance_in = xdistance_cm/2.54#could be more exact in the future
+    xdistance_in = xdistance_cm/2.54#could be more exact in the future
+     
+    count = 1
+    for t,x,y,r in zip(tracker.getTCoords(),tracker.getXCoords(),tracker.getYCoords(),tracker.getRCoords()):
+        worksheet.write(count, 0, t)
+        worksheet.write(count, 1, x)
+        worksheet.write(count, 2, y)
+        worksheet.write(count, 3, r)
+        count += 1
     
     file_name = tkFileDialog.asksaveasfile(mode='a', defaultextension=".xls")
     workbook.save(file_name.name)
+
+def moved():
+    global bottom
+    if w.get() not in tracker.coords.keys():
+        pauseVideo()
+        bottom.config(text='Click on the center of the circle')
+    updateCurrentFrame(image_label,video)
 
 def open():
    global tempdir, title, xPlot, yPlot, bothPlot, displayPlot, selection, type, input, reset, information, submit, image_label, w, var
@@ -485,7 +553,7 @@ def open():
    update_image(image_label, video, 0)
    slider_width = image_label.winfo_width()
    w = Scale(master=root, from_=0, to=size, orient=HORIZONTAL, length=slider_width)
-   w.bind("<ButtonRelease-1>", lambda event: updateCurrentFrame(image_label, video))
+   w.bind("<ButtonRelease-1>", lambda event: moved())
    w.grid(row=1, column=0, columnspan=4)
 
    information = Label(master=root, text="Enter the size of the object (cm): ")
@@ -505,7 +573,61 @@ def open():
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, video))    
-  
+
+"""Interactive Data Mode"""
+"""***************************************************************************"""
+def interactiveDataMode():
+    #global image_label, pauseButton, playButton, fastButton, slowButton, end, reset, w
+    data = Tk()
+    data.withdraw()
+    data = Toplevel()
+
+    xButton = Button(master=data,text='x', command = xData )
+    xButton.grid(row=0, column=0, columnspan=2)
+    
+    yButton = Button(master=data,text='y', command = yData )
+    yButton.grid(row=1, column=0, columnspan=2)
+    
+    rButton = Button(master=data,text='r', command = rData )
+    rButton.grid(row=2, column=0, columnspan=2)
+
+    xVelButton = Button(master=data,text='x Velocity', command = xVelData )
+    xVelButton.grid(row=3, column=0, columnspan=2)
+
+    yVelButton = Button(master=data,text='y Velocity', command = yVelData )
+    yVelButton.grid(row=4, column=0, columnspan=2)
+
+    xAccButton = Button(master=data,text='x Acceleration', command = xAccData )
+    xAccButton.grid(row=5, column=0, columnspan=2)
+
+    yAccButton = Button(master=data,text='y Acceleration', command = yAccData )
+    yAccButton.grid(row=6, column=0, columnspan=2)
+
+def plotData(x,y,num):
+    plt.figure(num)
+    plt.plot(x,y,'ro')
+    plt.show()
+
+def xData():
+    plotData(tracker.getTCoords(),tracker.getXCoords(),1)
+def yData():
+    plotData(tracker.getTCoords(),tracker.getYCoords(),2)
+def rData():
+    plotData(tracker.getTCoords(),tracker.getRCoords(),3)
+def xVelData():
+    x,y = tracker.xVelocity()
+    plotData(x,y,4)
+def yVelData():
+    x,y = tracker.yVelocity()
+    plotData(x,y,5)
+def xAccData():
+    x,y = tracker.xAcceleration()
+    plotData(x,y,6)
+def yAccData():
+    x,y = tracker.yAcceleration()
+    plotData(x,y,7)
+"""***************************************************************************"""
+
 if __name__ == '__main__':
    root = Tk()
    root.withdraw() #use to hide tkinter window
@@ -540,18 +662,3 @@ if __name__ == '__main__':
    mainloop()
 
 
-"""master = Tk()
-master = Toplevel()
-master.wm_title("Object Tracker")
-resultx = StringVar()
-resulty = StringVar()
-xdistance_cm = tracker.xMax() - tracker.xMin()
-ydistance_cm = tracker.yMax() - tracker.yMin()
-#dont forget radius (avg(rCoords))
-responsex = "The circle traveled " + str(xdistance_cm) + " cm horizontally (or " + str(xdistance_in) + "in)."
-responsey = "The circle traveled " + str(ydistance_cm) + " cm vertically (or " + str(ydistance_in) + "in)."
-resultx.set(responsex)
-resulty.set(responsey)
-Label(master, textvariable=resultx).grid(row=0)
-Label(master, textvariable=resulty).grid(row=1)
-mainloop()"""

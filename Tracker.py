@@ -54,5 +54,35 @@ class Tracker:
       
     def yMin(self):
         return min(self.yCoords)
+    
+    def getRadius(self):
+        #we probably want to check how spread out the range is
+        return sum(self.rCoords)/len(self.rCoords)
 
+    """Must return tCoords as well because it cuts one off on either end"""
+    def xVelocity(self):
+        return self.tCoords[1:len(self.tCoords)-1],self._SimpleVelocity(self.xCoords)
 
+    def yVelocity(self):
+        return self.tCoords[1:len(self.tCoords)-1],self._SimpleVelocity(self.yCoords)
+
+    def _SimpleVelocity(self,coords):
+        vel = []
+        if len(coords) > 3:
+            for i in range(1,len(coords)-1):
+                vel += [((coords[i+1]-coords[i-1])*1.0)/(self.tCoords[i+1]-self.tCoords[i-1])]
+        return vel
+
+    """Must return tCoords as well because it cuts one off on either end"""
+    def xAcceleration(self):
+        return self.tCoords[2:len(self.tCoords)-2],self._SimpleAcceleration(self._SimpleVelocity(self.xCoords))
+
+    def yAcceleration(self):
+        return self.tCoords[2:len(self.tCoords)-2],self._SimpleAcceleration(self._SimpleVelocity(self.yCoords))
+
+    def _SimpleAcceleration(self,vel):
+        acc = []
+        if len(vel) > 3:
+            for i in range(1,len(vel)-1):
+                acc += [((vel[i+1]-vel[i-1])*1.0)/(self.tCoords[i+2]-self.tCoords[i])]
+        return acc
