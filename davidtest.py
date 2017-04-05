@@ -17,9 +17,6 @@ import argparse
 import imutils
 import matplotlib
 import xlwt
-from formlayout import ColorButton
-from chaco.default_colormaps import gray
-from mx.TextTools.mxTextTools.mxTextTools import lower
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -132,7 +129,7 @@ def update_image(image_label, video, currentFrame):
 
    elif not pause:
        if selection == 0:
-           frame,lost = tracker.find(frame,currentFrame,pause)
+           frame,lost,x,y = tracker.find(frame,currentFrame,pause)
        elif selection == 1:
             frame,lost = color_tracker.findColor(frame, upper_threshold)
             
