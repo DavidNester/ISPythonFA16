@@ -24,6 +24,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
+from InteractiveDataWindow import InteractiveDataWindow
 
 currentFrame = 1
 
@@ -219,7 +220,7 @@ def on_mouse(event):
             export.grid(row = 4, column = 1)
     
             #interactive data mode button
-            dataButton = Button(master=root, text='Data Mode', command=interactiveDataMode)
+            dataButton = Button(master=root, text='Data Mode', command=dataMode)
             dataButton.grid(row = 4, column = 0)
     
 
@@ -229,6 +230,9 @@ def on_mouse(event):
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             bottom.config(text='Click on the outside of the circle')
                  
+def dataMode():
+    dataMode = InteractiveDataWindow(tracker)
+
 def playVideo(root, image_label, video):
     global pause
     pause = False
@@ -441,59 +445,6 @@ def open():
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, video))    
 
-"""Interactive Data Mode"""
-"""***************************************************************************"""
-def interactiveDataMode():
-    #global image_label, pauseButton, playButton, fastButton, slowButton, end, reset, w
-    data = Tk()
-    data.withdraw()
-    data = Toplevel()
-
-    xButton = Button(master=data,text='x', command = xData )
-    xButton.grid(row=0, column=0, columnspan=2)
-    
-    yButton = Button(master=data,text='y', command = yData )
-    yButton.grid(row=1, column=0, columnspan=2)
-    
-    rButton = Button(master=data,text='r', command = rData )
-    rButton.grid(row=2, column=0, columnspan=2)
-
-    xVelButton = Button(master=data,text='x Velocity', command = xVelData )
-    xVelButton.grid(row=3, column=0, columnspan=2)
-
-    yVelButton = Button(master=data,text='y Velocity', command = yVelData )
-    yVelButton.grid(row=4, column=0, columnspan=2)
-
-    xAccButton = Button(master=data,text='x Acceleration', command = xAccData )
-    xAccButton.grid(row=5, column=0, columnspan=2)
-
-    yAccButton = Button(master=data,text='y Acceleration', command = yAccData )
-    yAccButton.grid(row=6, column=0, columnspan=2)
-
-def plotData(x,y,num):
-    plt.figure(num)
-    plt.plot(x,y,'ro')
-    plt.show()
-
-def xData():
-    plotData(tracker.getTCoords(),tracker.getXCoords(),1)
-def yData():
-    plotData(tracker.getTCoords(),tracker.getYCoords(),2)
-def rData():
-    plotData(tracker.getTCoords(),tracker.getRCoords(),3)
-def xVelData():
-    x,y = tracker.xVelocity()
-    plotData(x,y,4)
-def yVelData():
-    x,y = tracker.yVelocity()
-    plotData(x,y,5)
-def xAccData():
-    x,y = tracker.xAcceleration()
-    plotData(x,y,6)
-def yAccData():
-    x,y = tracker.yAcceleration()
-    plotData(x,y,7)
-"""***************************************************************************"""
 
 if __name__ == '__main__':
    root = Tk()
