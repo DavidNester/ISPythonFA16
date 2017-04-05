@@ -27,21 +27,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
-<<<<<<< HEAD
+
 from InteractiveDataWindow import InteractiveDataWindow
-=======
 from colorTracker import ColorTracker
 
 
-reset = ""
-e1 = ""
-height = 0
-width = 0
-radio = 0
-currentFrame = 1
+e1 = None
 type = ""
-size = 120
->>>>>>> origin/master
+#size = 120
 
 currentFrame = 1
 
