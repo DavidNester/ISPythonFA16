@@ -25,18 +25,21 @@ from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
 
-reset = ""
+currentFrame = 1
+
+reset = None
 height = 0
 width = 0
 radio = 0
-currentFrame = 1
 size = 0
 speed = 0
 plot = False
+
 xCoords = []
 yCoords = []
 rCoords = []
 tCoords = []
+
 size_pixel = 0
 r_pixel = 0
 var  = 0
@@ -46,25 +49,32 @@ xdistance_cm = 0
 xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
+
 center = None
 outside = None
 first = None
+
 bottom = None
 frame = None
 pause = True
 input = None
 tempdir = None
 title = None
-xPlot = ""
+
 w = ""
-yPlot = ""
+
+xPlot = None
+yPlot = None
 noPlot = None
-bothPlot = ""
-displayPlot = ""
-var = ""
-information  = ""
-submit = ""
-image_label = ""
+bothPlot = None
+displayPlot = None
+var = None
+
+information  = None
+submit = None
+
+image_label = None
+
 backgrounds = []
 axes = []
 lines = []
@@ -242,9 +252,10 @@ def fastForward():
     speed += 1
 
 def reset():
+    pass
+""" Save for when window session becomes an object
+def reset():
     global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
-
-
 
     radio = 0
     currentFrame = 1
@@ -277,7 +288,7 @@ def reset():
 
     tracker = CircleTracker()
     update_all(root,image_label,video)
-
+"""
 def submitData():
     global size, bottom, input, information, submit,xPlot,yPlot,bothPlot,noPlot,displayPlot
     size = float(input.get())
@@ -310,9 +321,10 @@ def displayChoice():
     bothPlot.destroy()
     noPlot.destroy()
     displayPlot.destroy()
+
+
     axes = []
     f = Figure(figsize=(5,5), dpi=100)
-
     if var.get()==1:
         axis = f.add_subplot(111)
         axis.set_xlim([0,len(video)])
@@ -332,7 +344,7 @@ def displayChoice():
         axis = f.add_subplot(122)
         axis.set_xlim([0,len(video)])
         axis.set_ylim([0,height])
-        axes +=[axis]
+        axes += [axis]
    
     canvas = FigureCanvasTkAgg(f, master=root)
     canvas.show()
@@ -346,7 +358,6 @@ def displayChoice():
     elif var.get() == 3:
         lines = [axes[0].plot(xCoords,tCoords,'ro',animated=True)[0],axes[1].plot(xCoords,tCoords,'ro',animated=True)[0]]
     backgrounds = [f.canvas.copy_from_bbox(ax.bbox) for ax in axes]
-
 
     bottom = Label(master=root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
     bottom.grid(row=3, column=0, columnspan=4)
@@ -372,32 +383,13 @@ def exportData():
     xdistance_in = xdistance_cm/2.54#could be more exact in the future
     xdistance_in = xdistance_cm/2.54#could be more exact in the future
      
-     
-    frames = tracker.getTCoords()
     count = 1
-    for f in frames:
-        worksheet.write(count, 0, f)
-        count += 1
-          
-    xCoords = tracker.getXCoords()
-    count = 1
-    for x in xCoords:
+    for t,x,y,r in zip(tracker.getTCoords(),tracker.getXCoords(),tracker.getYCoords(),tracker.getRCoords()):
+        worksheet.write(count, 0, t)
         worksheet.write(count, 1, x)
-        count += 1
-       
-    count = 1
-    yCoords = tracker.getYCoords()
-    for y in yCoords:
-       worksheet.write(count, 2, y)
-       count += 1
-        
-    count = 1
-    rCoords = tracker.getRCoords()
-    for r in rCoords:
+        worksheet.write(count, 2, y)
         worksheet.write(count, 3, r)
         count += 1
-        
-    
     
     file_name = tkFileDialog.asksaveasfile(mode='a', defaultextension=".xls")
     workbook.save(file_name.name)
@@ -448,7 +440,9 @@ def open():
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, video))    
-  
+
+"""Interactive Data Mode"""
+"""***************************************************************************"""
 def interactiveDataMode():
     #global image_label, pauseButton, playButton, fastButton, slowButton, end, reset, w
     data = Tk()
@@ -499,7 +493,7 @@ def xAccData():
 def yAccData():
     x,y = tracker.yAcceleration()
     plotData(x,y,7)
-
+"""***************************************************************************"""
 
 if __name__ == '__main__':
    root = Tk()
