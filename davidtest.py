@@ -17,6 +17,9 @@ import argparse
 import imutils
 import matplotlib
 import xlwt
+from formlayout import ColorButton
+from chaco.default_colormaps import gray
+from mx.TextTools.mxTextTools.mxTextTools import lower
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -24,7 +27,21 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
+<<<<<<< HEAD
 from InteractiveDataWindow import InteractiveDataWindow
+=======
+from colorTracker import ColorTracker
+
+
+reset = ""
+e1 = ""
+height = 0
+width = 0
+radio = 0
+currentFrame = 1
+type = ""
+size = 120
+>>>>>>> origin/master
 
 currentFrame = 1
 
@@ -33,6 +50,7 @@ height = 0
 width = 0
 radio = 0
 size = 0
+
 speed = 0
 plot = False
 
@@ -45,8 +63,11 @@ size_pixel = 0
 r_pixel = 0
 var  = 0
 f = None
+upper_threshold = 0
+lower_threshold = 0
 fps = 123
 xdistance_cm = 0
+selection = 0
 xdistance_in = 0
 ydistance_cm = 0
 ydistance_in = 0
@@ -83,6 +104,7 @@ canvas = None
 old = 0
 
 tracker = CircleTracker()
+color_tracker = ColorTracker()
 
 """distance between two coordinates"""
 def distance(p1,p2):
@@ -97,7 +119,11 @@ def quit_(root):
 
   
 def update_image(image_label, video, currentFrame):
+
+   global tracker, color_tracker, pause, plot, selection, upper_threshold, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
+
    global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes, bottom
+
    frame = video[currentFrame]
    x = None
    y = None
@@ -110,8 +136,17 @@ def update_image(image_label, video, currentFrame):
        x,y,r = tracker.coords[currentFrame]
    
    #find new circles if new frame and not paused
+
+   elif not pause:
+       if selection == 0:
+           frame,lost = tracker.find(frame,currentFrame,pause)
+       elif selection == 1:
+            frame,lost = color_tracker.findColor(frame, upper_threshold)
+            
+
    elif not pause and first is not None:
        frame,lost,x,y = tracker.find(frame,currentFrame,pause)
+
        if lost:
            bottom.config(text='Circle is lost. Please click on the center')
            pauseVideo()
@@ -156,7 +191,16 @@ def update_all(root, image_label, video):
        update_image(image_label, video, currentFrame)
        root.after(0, func=lambda: update_all(root, image_label, video))
        
-
+def submitThreshold(intensity, master):
+    global lower_threshold, upper_threshold, e1
+    lower_threshold = int(intensity) - int(e1.get())
+    if lower_threshold<0:
+        lower_threshold = 0
+    upper_threshold = int(intensity) + int(e1.get())
+    master.destroy()
+    print lower_threshold, upper_threshold
+    
+    
 #multiprocessing image processing functions-------------------------------------
 def image_capture(video):
    global tempdir
@@ -173,13 +217,16 @@ def image_capture(video):
 """Function called when the image is clicked on"""
 """used to get user input on location when no object is found by clicking center and outside of object"""
 def on_mouse(event):
-    global center,outside,currentFrame,tracker,pause,first,points,ax,plot,frame,video,currentFrame, image_label
+    global center,outside,currentFrame,tracker,e1,pause,first,points,ax,plot,frame,video,currentFrame, image_label, bottom, selection
     #get only left mouse click
     x=event.x
     y=event.y
     
+    """pixel = frame[y, x]
+    print pixel
+    """
     #only use if paused (paused when nothing is found)'
-    if pause:
+    if pause and selection == 0:
         #if second click (outside)
         if center is not None:
             outside = (x,y)
@@ -229,7 +276,49 @@ def on_mouse(event):
             center = (x,y)
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             bottom.config(text='Click on the outside of the circle')
-                 
+
+    elif pause and selection == 1:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        intensity = gray[y, x]
+        
+        cv2.imwrite('hsv.jpg', frame)
+        master = Toplevel()
+        img = ImageTk.PhotoImage(Image.open("hsv.jpg"))
+
+        panel = Label(master, image = img)
+        panel.grid(row=0, column=0, columnspan=2)
+        
+        Label(master, text="What threshold would you like? ").grid(row=1, columnspan=2)
+        Label(master, text="Lower H: ").grid(row=2, column=0)
+        Label(master, text="Lower S: ").grid(row=3, column=0)
+        Label(master, text="Lower V: ").grid(row=4, column=0)
+        Label(master, text="Upper H: ").grid(row=5, column=0)
+        Label(master, text="Upper S: ").grid(row=6, column=0)
+        Label(master, text="Upper V: ").grid(row=7, column=0)
+        
+        lower_h = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
+        lower_s = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
+        lower_v = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
+        upper_h = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
+        upper_s = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
+        upper_v = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
+        
+        lower_h.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        lower_s.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        lower_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        upper_h.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        upper_s.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        upper_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        
+        lower_h.grid(row=2, column=1)
+        lower_s.grid(row=3, column=1)
+        lower_v.grid(row=4, column=1)
+        upper_h.grid(row=5, column=1)
+        upper_s.grid(row=6, column=1)
+        upper_v.grid(row=7, column=1)
+        Button(master, text='Submit', command=lambda: submitThreshold(intensity, master)).grid(row=8, column=1, sticky=W, pady=4)
+        mainloop( )
+    
 def dataMode():
     dataMode = InteractiveDataWindow(tracker)
 
@@ -247,6 +336,18 @@ def updateCurrentFrame(image_label, video):
     currentFrame = w.get()
     update_image(image_label, video, currentFrame)
     
+def updateHSV(img, lower, upper, panel):    
+    lower = np.array(lower, dtype = "uint8")
+    upper = np.array(upper, dtype = "uint8")
+    
+    pic = cv2.imread(img)
+    mask = cv2.inRange(pic, lower, upper)
+    output = cv2.bitwise_and(pic, pic, mask = mask)
+    
+    b = ImageTk.PhotoImage(image=np.hstack([img, output]))
+    panel.configure(image=b)
+    master.update()
+        
 def slowDown():
     global speed
     speed -= 1
@@ -256,10 +357,13 @@ def fastForward():
     speed += 1
 
 def reset():
+    global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+
     pass
 """ Save for when window session becomes an object
 def reset():
     global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
+
 
     radio = 0
     currentFrame = 1
@@ -291,6 +395,7 @@ def reset():
     yLine = 0
 
     tracker = CircleTracker()
+    color_tracker = ColorTracker()
     update_all(root,image_label,video)
 """
 def submitData():
@@ -376,6 +481,35 @@ def exportData():
     worksheet.write(0, 1, 'X Axis')
     worksheet.write(0, 2, 'Y Axis')
     worksheet.write(0, 3, 'Radius')
+
+    worksheet.write(0, 5, 'Size of Object: ' + str(size) + "cm")
+     
+     
+    frames = tracker.getTCoords()
+    currentFrame = 1
+    for f in frames:
+        worksheet.write(currentFrame, 0, f)
+        currentFrame += 1
+          
+    xCoords = tracker.getXCoords()
+    currentFrame = 1
+    for x in xCoords:
+        worksheet.write(currentFrame, 1, x)
+        currentFrame += 1
+       
+    currentFrame = 1
+    yCoords = tracker.getYCoords()
+    for y in yCoords:
+       worksheet.write(currentFrame, 2, y)
+       currentFrame += 1
+        
+    currentFrame = 1
+    rCoords = tracker.getRCoords()
+    for r in rCoords:
+        worksheet.write(currentFrame, 3, r)
+        currentFrame += 1
+        
+
     worksheet.write(0, 5, 'Size of Object: ' + str(size) + 'cm')
     
     #centimeters / pixel
@@ -383,6 +517,7 @@ def exportData():
     
     xdistance_cm = (tracker.xMax() - tracker.xMin()) * centConversion
     ydistance_cm = (tracker.yMax() - tracker.yMin()) * centConversion
+
     
     xdistance_in = xdistance_cm/2.54#could be more exact in the future
     xdistance_in = xdistance_cm/2.54#could be more exact in the future
@@ -406,8 +541,10 @@ def moved():
     updateCurrentFrame(image_label,video)
 
 def open():
-   global tempdir, title, xPlot, yPlot, bothPlot, displayPlot, var, input, reset, information, submit, image_label, w
-   openButton.destroy()
+   global tempdir, title, xPlot, yPlot, bothPlot, displayPlot, selection, type, input, reset, information, submit, image_label, w, var
+   
+   selection = type.get()
+   holder.destroy()
    title.destroy()
    
    """INPUT FILE"""
@@ -455,11 +592,25 @@ if __name__ == '__main__':
 
    title = Label(master=root, text="Welcome to the Object Tracker!")
    title.config(font=("Courier", 30))
-   title.grid(row=0, column=0, padx=100,pady=50)
+   title.grid(row=0, column=0, padx=100, pady=50)
    
-   openButton = Button(master=root, text="OPEN VIDEO", command= lambda: open())
-   openButton.grid(row=1, column=0, padx=100, pady=50)
+   type = IntVar()
+   holder = Frame(master=root)
+    
+   objectButton = Radiobutton(master=holder, text="Circle Track", variable=type, value=0)
+   objectButton.grid(row=0, column=0)
    
+   colorButton = Radiobutton(master=holder, text="Color Track", variable=type, value=1)
+   colorButton.grid(row=0, column=1, padx = 150)
+   
+   bothButton = Radiobutton(master=holder, text="Both", variable=type, value=2)
+   bothButton.grid(row=0, column=2)
+   
+   openVideo = Button(master=holder, text="Open Video...", command=open)
+   openVideo.grid(row=1, column=1, pady=25)
+
+   holder.grid(row=1, column=0)
+      
    root.lift()
    root.attributes('-topmost',True)
    root.after_idle(root.attributes,'-topmost',False)
