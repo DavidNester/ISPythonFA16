@@ -6,6 +6,7 @@ from PyQt4 import QtGui
 from Tkinter import *
 import tkFileDialog
 import os
+import PIL
 from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2.cv as cv
@@ -273,9 +274,11 @@ def on_mouse(event):
             cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             bottom.config(text='Click on the outside of the circle')
     elif pause and selection == 1:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        intensity = gray[y, x]
-        
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        print hsv[y,x]
+        hsv1 = hsv[y,x]
+        print hsv1[1]
+                
         cv2.imwrite('hsv.jpg', frame)
         master = Toplevel()
         img = ImageTk.PhotoImage(Image.open("hsv.jpg"))
@@ -298,12 +301,19 @@ def on_mouse(event):
         upper_s = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
         upper_v = Scale(master, from_=0, to=255, orient=HORIZONTAL, length=255)
         
-        lower_h.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
-        lower_s.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
-        lower_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
-        upper_h.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
-        upper_s.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
-        upper_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel))
+        lower_h.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
+        lower_s.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
+        lower_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
+        upper_h.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
+        upper_s.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
+        upper_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
+        
+        lower_h.set(hsv1[0]-40)
+        lower_s.set(hsv1[1]-60)
+        lower_v.set(hsv1[2]-40)
+        upper_h.set(hsv1[0]+40)
+        upper_s.set(hsv1[1]+60)
+        upper_v.set(hsv1[2]+40)
         
         lower_h.grid(row=2, column=1)
         lower_s.grid(row=3, column=1)
@@ -312,7 +322,8 @@ def on_mouse(event):
         upper_s.grid(row=6, column=1)
         upper_v.grid(row=7, column=1)
         Button(master, text='Submit', command=lambda: submitThreshold(intensity, master)).grid(row=8, column=1, sticky=W, pady=4)
-        mainloop( )
+        updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master)
+        
     
 def playVideo(root, image_label, video):
     global pause
@@ -328,7 +339,10 @@ def updateCurrentFrame(image_label, video):
     currentFrame = w.get()
     update_image(image_label, video, currentFrame)
     
-def updateHSV(img, lower, upper, panel):    
+start = False
+def updateHSV(img, lower, upper, panel, master):    
+    global start
+    
     lower = np.array(lower, dtype = "uint8")
     upper = np.array(upper, dtype = "uint8")
     
@@ -336,9 +350,16 @@ def updateHSV(img, lower, upper, panel):
     mask = cv2.inRange(pic, lower, upper)
     output = cv2.bitwise_and(pic, pic, mask = mask)
     
-    b = ImageTk.PhotoImage(image=np.hstack([img, output]))
-    panel.configure(image=b)
-    master.update()
+    cv2.imwrite('output.jpg', output)
+    
+    final = ImageTk.PhotoImage(Image.open("output.jpg"))
+    panel.configure(image=final)
+    panel.image = final
+    if start == False:
+        mainloop()
+        start = True
+    else:
+        master.update()
         
 def slowDown():
     global speed
