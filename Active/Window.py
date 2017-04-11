@@ -176,7 +176,6 @@ class MainWindow(object):
             worksheet.write(count, 3, r)
             count += 1
 
-        worksheet.write(0, 5, 'Size of Object: ' + str(self.size) + 'cm')
         
         #centimeters / pixel
         centConversion = (self.size*1.0)/(self.tracker.getRadius()*1.0)
