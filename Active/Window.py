@@ -24,7 +24,7 @@ class MainWindow(object):
         self.image_label = Label(master=self.root) #label for the video frame
         self.image_label.grid(row=0, column=0, columnspan=4)
         
-        self.information = Label(master=self.root, text="Enter the size of the object (cm): ")
+        self.information = Label(master=self.root, text="Enter the Radius of the object (cm): ")
         self.information.grid(row=3, column=0, columnspan=2)
    
         self.input = Entry(master=self.root)

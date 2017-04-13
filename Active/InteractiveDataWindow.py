@@ -47,11 +47,24 @@ class InteractiveDataWindow:
         self.fitYButton = Button(master=self.data,text='Fit Y', command = self.fitY)
         self.fitYButton.grid(row=1,column=2,columnspan=2)
     
-        self.fitXButton = Button(master=self.data,text='Fit X Velocity', command = self.fitXVelocity)
-        self.fitXButton.grid(row=2,column=2,columnspan=2)
+        self.fitXVelButton = Button(master=self.data,text='Fit X Velocity', command = self.fitXVelocity)
+        self.fitXVelButton.grid(row=2,column=2,columnspan=2)
         
-        self.fitYButton = Button(master=self.data,text='Fit Y Velocity', command = self.fitYVelocity)
-        self.fitYButton.grid(row=3,column=2,columnspan=2)
+        self.fitYVelButton = Button(master=self.data,text='Fit Y Velocity', command = self.fitYVelocity)
+        self.fitYVelButton.grid(row=3,column=2,columnspan=2)
+    
+        self.scaleXButton = Button(master=self.data,text='Scale X', command = self.scaleX)
+        self.scaleXButton.grid(row=0,column=4,columnspan=2)
+        
+        self.scaleYButton = Button(master=self.data,text='Scale Y', command = self.scaleY)
+        self.scaleYButton.grid(row=1,column=4,columnspan=2)
+        
+        self.scaleXVelButton = Button(master=self.data,text='Scale X Velocity', command = self.scaleXVelocity)
+        self.scaleXVelButton.grid(row=2,column=4,columnspan=2)
+        
+        self.scaleYVelButton = Button(master=self.data,text='Scale Y Velocity', command = self.scaleYVelocity)
+        self.scaleYVelButton.grid(row=3,column=4,columnspan=2)
+
 
     def plotData(self,x,y,num):
         plt.figure(num)
@@ -95,4 +108,44 @@ class InteractiveDataWindow:
         #plt.plot(x, cs(x, 2), label="S''")
         #plt.plot(x, cs(x, 3), label="S'''")
         plt.show()
-    
+
+    def scaleX(self):
+        x = self.tracker.getTCoords()
+        y = self.tracker.getXCoords()
+        newX = []
+        newY = []
+        for coord in y:
+            newY += [(coord-self.tracker.xMin())*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
+        for fr in x:
+            newX += [(fr*1.0)/self.tracker.getFPS()]
+        self.plotData(newX,newY,12)
+    def scaleY(self):
+        x = self.tracker.getTCoords()
+        y = self.tracker.getYCoords()
+        newX = []
+        newY = []
+        for coord in y:
+            newY += [(coord-self.tracker.yMin())*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
+        for fr in x:
+            newX += [(fr*1.0)/self.tracker.getFPS()]
+        self.plotData(newX,newY,13)
+    def scaleXVelocity(self):
+        x,y = self.tracker.xVelocity()
+        newX = []
+        newY = []
+        for coord in y:
+            newY += [(coord-min(y))*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
+        for fr in x:
+            newX += [(fr*1.0)/self.tracker.getFPS()]
+        self.plotData(newX,newY,14)
+    def scaleYVelocity(self):
+        x,y = self.tracker.yVelocity()
+        newX = []
+        newY = []
+        for coord in y:
+            newY += [(coord-min(y))*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
+        for fr in x:
+            newX += [(fr*1.0)/self.tracker.getFPS()]
+        self.plotData(newX,newY,15)
+
+
