@@ -29,15 +29,21 @@ class MainWindow(object):
    
         self.input = Entry(master=self.root)
         self.input.grid(row=3, column=2)
-   
+
+        self.fpsInfo = Label(master=self.root, text="Enter the Frames Per Second of the video: ")
+        self.fpsInfo.grid(row=4, column=0, columnspan=2)
+        
+        self.fpsinput = Entry(master=self.root)
+        self.fpsinput.grid(row=4, column=2)
+        
         self.submit = Button(master=self.root, text='Submit', command=self.submitData)
-        self.submit.grid(row=3, column=3)
+        self.submit.grid(row=4, column=3)
    
         self.end = Button(master=self.root, text='End', command= self.quit_)
-        self.end.grid(row = 4, column = 3)
+        self.end.grid(row = 5, column = 3)
    
         self.reset = Button(master=self.root, text='Reset', command = self.reset)
-        self.reset.grid(row = 4, column = 2)
+        self.reset.grid(row = 5, column = 2)
    
         # setup the update callback
         self.root.after(0, func=self.update_all)
@@ -64,9 +70,12 @@ class MainWindow(object):
         self.update_image()
 
     def submitData(self):
-        self.size = float(self.input.get())
+        self.tracker.setSize(float(self.input.get()))
+        self.tracker.setFPS(float(self.fpsinput.get()))
         self.information.destroy()
         self.input.destroy()
+        self.fpsinput.destroy()
+        self.fpsInfo.destroy()
         self.submit.destroy()
 
         self.holder = Frame(master=self.root)
