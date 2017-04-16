@@ -4,17 +4,44 @@ from Tracker import Tracker
 
 class ColorTracker(Tracker):
     
-    def findColor(self,frame, threshold):
+    def findColor(self,lower, upper, frame):
         lost = False
         
-        original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale
-        retval, image = cv2.threshold(original, threshold, 255, cv2.cv.CV_THRESH_BINARY)
-        cv2.imshow('color', image)
-        contours, hierarchy = cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(image, contours, -1, (0,255,0), 3)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        lower = np.array(lower, dtype = "uint8")
+        upper = np.array(upper, dtype = "uint8")
         
-        
-        # Bitwise-AND mask and original image
-        #res = cv2.bitwise_and(frame,frame, mask= mask)
+        # construct a mask for the color "green", then perform
+        # a series of dilations and erosions to remove any small
+        # blobs left in the mask
+        mask = cv2.inRange(hsv, lower, upper)
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, None, iterations=2)
+    
+        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)[-2]
+        center = None
+     
+        # only proceed if at least one contour was found
+        if len(cnts) > 0:
+            # find the largest contour in the mask, then use
+            # it to compute the minimum enclosing circle and
+            # centroid
+            c = max(cnts, key=cv2.contourArea)
+            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            M = cv2.moments(c)
+            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+            print x, y
+            # only proceed if the radius meets a minimum size
+            if radius > 10:
+                # draw the circle and centroid on the frame,
+                # then update the list of tracked points
+                cv2.circle(frame, (int(x), int(y)), int(radius),
+                    (0, 255, 255), 2)
+                cv2.circle(frame, center, 5, (0, 0, 255), -1)
+            
+            
+            # Bitwise-AND mask and original image
+            #res = cv2.bitwise_and(frame,frame, mask= mask)
         
         return frame, lost

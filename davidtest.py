@@ -26,7 +26,7 @@ from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
 
-from InteractiveDataWindow import InteractiveDataWindow
+#from InteractiveDataWindow import InteractiveDataWindow
 from colorTracker import ColorTracker
 
 
@@ -182,14 +182,10 @@ def update_all(root, image_label, video):
        update_image(image_label, video, currentFrame)
        root.after(0, func=lambda: update_all(root, image_label, video))
        
-def submitThreshold(intensity, master):
-    global lower_threshold, upper_threshold, e1
-    lower_threshold = int(intensity) - int(e1.get())
-    if lower_threshold<0:
-        lower_threshold = 0
-    upper_threshold = int(intensity) + int(e1.get())
+def submitThreshold(lower, upper, master):
+    global frame
+    color_tracker.findColor(lower, upper, frame)
     master.destroy()
-    print lower_threshold, upper_threshold
     
     
 #multiprocessing image processing functions-------------------------------------
@@ -304,11 +300,11 @@ def on_mouse(event):
         upper_v.bind("<ButtonRelease-1>", lambda event: updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master))
         
         lower_h.set(hsv1[0]-40)
-        lower_s.set(hsv1[1]-60)
+        lower_s.set(hsv1[1]-100)
         lower_v.set(hsv1[2]-40)
-        upper_h.set(hsv1[0]+40)
-        upper_s.set(hsv1[1]+60)
-        upper_v.set(hsv1[2]+40)
+        upper_h.set(hsv1[0]+80)
+        upper_s.set(hsv1[1]+80)
+        upper_v.set(hsv1[2]+80)
         
         lower_h.grid(row=2, column=1)
         lower_s.grid(row=3, column=1)
@@ -316,7 +312,7 @@ def on_mouse(event):
         upper_h.grid(row=5, column=1)
         upper_s.grid(row=6, column=1)
         upper_v.grid(row=7, column=1)
-        Button(master, text='Submit', command=lambda: submitThreshold(intensity, master)).grid(row=8, column=1, sticky=W, pady=4)
+        Button(master, text='Submit', command=lambda: submitThreshold([lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], master)).grid(row=8, column=1, sticky=W, pady=4)
         updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel, master)
         
     
@@ -343,6 +339,7 @@ def updateHSV(img, lower, upper, panel, master):
     
     lower = np.array(lower, dtype = "uint8")
     upper = np.array(upper, dtype = "uint8")
+    print lower, upper
     
     pic = cv2.imread(img)
     mask = cv2.inRange(pic, lower, upper)
