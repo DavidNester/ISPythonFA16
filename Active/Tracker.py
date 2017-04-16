@@ -10,6 +10,8 @@ class Tracker:
         self.yCoords = []
         self.rCoords = []
         self.tCoords = []
+        self.fps = 0
+        self.size = 0
     
     def normal(self,x,y,r):
         #accept data if we hae no prior knowledge
@@ -86,3 +88,12 @@ class Tracker:
             for i in range(1,len(vel)-1):
                 acc += [((vel[i+1]-vel[i-1])*1.0)/(self.tCoords[i+2]-self.tCoords[i])]
         return acc
+
+    def setFPS(self,fps):
+        self.fps = fps
+    def setSize(self,size):
+        self.size = size
+    def getFPS(self):
+        return self.fps
+    def getSize(self):
+        return self.size
