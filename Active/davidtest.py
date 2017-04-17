@@ -66,6 +66,8 @@ ydistance_in = 0
 center = None
 outside = None
 first = None
+upper=""
+lower=""
 
 bottom = None
 frame = None
@@ -111,9 +113,7 @@ def quit_(root):
   
 def update_image(image_label, video, currentFrame):
 
-   global tracker, color_tracker, pause, plot, selection, upper_threshold, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
-
-   global tracker, pause, plot, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes, bottom
+   global tracker, color_tracker, upper, lower, pause, plot, selection, upper_threshold, size, xAxis, yAxis,canvas, size_pixel, frame, f,xLine,yLine,height,width, xCoords, var, lines, backgrounds,canvas,axes
 
    frame = video[currentFrame]
    x = None
@@ -132,7 +132,7 @@ def update_image(image_label, video, currentFrame):
        if selection == 0:
            frame,lost,x,y = tracker.find(frame,currentFrame,pause)
        elif selection == 1:
-            frame,lost = color_tracker.findColor(frame, upper_threshold)
+            frame,lost,x,y = color_tracker.findColor(lower, upper, frame, currentFrame)
             
 
    elif not pause and first is not None:
@@ -182,10 +182,37 @@ def update_all(root, image_label, video):
        update_image(image_label, video, currentFrame)
        root.after(0, func=lambda: update_all(root, image_label, video))
        
-def submitThreshold(lower, upper, master):
-    global frame
-    color_tracker.findColor(lower, upper, frame)
+def submitThreshold(lower1, upper1, master):
+    global frame, root, image_label, video, lower, upper
+    lower = lower1
+    upper = upper1
     master.destroy()
+    
+    # pause button
+    pauseButton = Button(master=root, text="Pause", command=pauseVideo)
+    pauseButton.grid(row=2, column=0)
+
+    #play button
+    playButton = Button(master=root, text="Play", command= lambda: playVideo(root, image_label, video))
+    playButton.grid(row=2, column=1)
+
+    #slow down
+    slowButton = Button(master=root, text='Slow Down', command=slowDown)
+    slowButton.grid(row=2, column=2)
+
+    #fast forward
+    fastButton = Button(master=root, text='Speed Up', command=fastForward)
+    fastButton.grid(row=2, column=3)
+
+    #export button
+    export = Button(master=root, text='Export', command= lambda: exportData())
+    export.grid(row = 4, column = 1)
+
+    #interactive data mode button
+    dataButton = Button(master=root, text='Data Mode', command=dataMode)
+    dataButton.grid(row = 4, column = 0)
+            
+    playVideo(root, image_label, video)
     
     
 #multiprocessing image processing functions-------------------------------------
@@ -266,9 +293,7 @@ def on_mouse(event):
 
     elif pause and selection == 1:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        print hsv[y,x]
         hsv1 = hsv[y,x]
-        print hsv1[1]
                 
         cv2.imwrite('hsv.jpg', frame)
         master = Toplevel()
@@ -339,7 +364,6 @@ def updateHSV(img, lower, upper, panel, master):
     
     lower = np.array(lower, dtype = "uint8")
     upper = np.array(upper, dtype = "uint8")
-    print lower, upper
     
     pic = cv2.imread(img)
     mask = cv2.inRange(pic, lower, upper)
@@ -371,8 +395,6 @@ def reset():
 """ Save for when window session becomes an object
 def reset():
     global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
-
-
     radio = 0
     currentFrame = 1
     size = 120
@@ -401,7 +423,6 @@ def reset():
     pause = True
     xLine = 0
     yLine = 0
-
     tracker = CircleTracker()
     color_tracker = ColorTracker()
     update_all(root,image_label,video)
@@ -623,5 +644,3 @@ if __name__ == '__main__':
    root.attributes('-topmost',True)
    root.after_idle(root.attributes,'-topmost',False)
    mainloop()
-
-
