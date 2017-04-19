@@ -23,27 +23,8 @@ class MainWindow(object):
         self.video = video
         self.image_label = Label(master=self.root) #label for the video frame
         self.image_label.grid(row=0, column=0, columnspan=4)
-        
-        self.information = Label(master=self.root, text="Enter the Radius of the object (cm): ")
-        self.information.grid(row=3, column=0, columnspan=2)
    
-        self.input = Entry(master=self.root)
-        self.input.grid(row=3, column=2)
-
-        self.fpsInfo = Label(master=self.root, text="Enter the Frames Per Second of the video: ")
-        self.fpsInfo.grid(row=4, column=0, columnspan=2)
-        
-        self.fpsinput = Entry(master=self.root)
-        self.fpsinput.grid(row=4, column=2)
-        
-        self.submit = Button(master=self.root, text='Submit', command=self.submitData)
-        self.submit.grid(row=4, column=3)
-   
-        self.end = Button(master=self.root, text='End', command= self.quit_)
-        self.end.grid(row = 5, column = 3)
-   
-        self.reset = Button(master=self.root, text='Reset', command = self.reset)
-        self.reset.grid(row = 5, column = 2)
+        self.init_buttons()
    
         # setup the update callback
         self.root.after(0, func=self.update_all)
@@ -69,6 +50,28 @@ class MainWindow(object):
     
         self.update_image()
 
+    def init_buttons(self):
+        self.information = Label(master=self.root, text="Enter the Radius of the object (cm): ")
+        self.information.grid(row=3, column=0, columnspan=2)
+        
+        self.input = Entry(master=self.root)
+        self.input.grid(row=3, column=2)
+        
+        self.fpsInfo = Label(master=self.root, text="Enter the Frames Per Second of the video: ")
+        self.fpsInfo.grid(row=4, column=0, columnspan=2)
+        
+        self.fpsinput = Entry(master=self.root)
+        self.fpsinput.grid(row=4, column=2)
+        
+        self.submit = Button(master=self.root, text='Submit', command=self.submitData)
+        self.submit.grid(row=4, column=3)
+        
+        self.end = Button(master=self.root, text='End', bg = 'red', command= self.quit_)
+        self.end.grid(row = 5, column = 3)
+        
+        self.reset = Button(master=self.root, text='Reset', bg = 'red', command = self.reset)
+        self.reset.grid(row = 5, column = 2)
+    
     def submitData(self):
         self.tracker.setSize(float(self.input.get()))
         self.tracker.setFPS(float(self.fpsinput.get()))
@@ -211,32 +214,6 @@ class MainWindow(object):
     
     def dataMode(self):
         dataMode = InteractiveDataWindow(self.tracker)
-    
-    def reset(self):
-        
-        self.size = 0
-        self.speed = 0
-        self.currentFrame = 1
-        self.old = 0
-        self.pause = True
-        self.tCoords = []
-        self.xCoords = []
-        self.yCoords = []
-        self.rCoords = []
-        self.w = None
-        self.height = 0
-        self.width = 0
-        self.fps = 123
-        self.center = None
-        self.outside = None
-        self.first = None
-        self.frame = None
-        self.plot = False
-        
-        # setup the update callback
-        self.root.after(0, func=self.update_all)
-        
-        self.update_image()
 
     """distance between two coordinates"""
     def distance(self,p1,p2):

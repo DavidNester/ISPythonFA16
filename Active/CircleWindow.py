@@ -19,9 +19,8 @@ class CircleWindow(MainWindow):
         super(CircleWindow, self).__init__(video)
 
     def reset(self):
-        self.tracker = CircleTracker()
         self.root.destroy()
-        super(CircleWindow,self).__init__(self.video)
+        self.__init__(self.video)
     
     def update_image(self):
         self.frame = self.video[self.currentFrame]
