@@ -3,6 +3,7 @@ import tkFileDialog
 import matplotlib
 import numpy as np
 from scipy.interpolate import CubicSpline
+from scipy.interpolate import UnivariateSpline
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -102,9 +103,8 @@ class InteractiveDataWindow:
 
     def trendline(self,x,y,num):
         plt.figure(num)
-        cs = CubicSpline(x,y)
+        cs = UnivariateSpline(x,y)
         plt.plot(x, cs(x), label="S")
-        #plt.plot(x, cs(x, 1), label="S'")
         #plt.plot(x, cs(x, 2), label="S''")
         #plt.plot(x, cs(x, 3), label="S'''")
         plt.show()

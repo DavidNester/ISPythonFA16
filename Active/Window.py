@@ -104,52 +104,51 @@ class MainWindow(object):
         self.noPlot.destroy()
         self.displayPlot.destroy()
         
+        self.image_label.bind('<Button-1>',self.on_mouse)
+        
+        if self.var.get() != 0:
+            self.axes = []
+            self.f = Figure(figsize=(5,5), dpi=100)
+            if self.var.get()==1:
+                axis = self.f.add_subplot(111)
+                axis.set_xlim([0,len(self.video)])
+                axis.set_ylim([0,self.width])
+                self.axes +=[axis]
+            elif self.var.get() == 2:
+                axis = self.f.add_subplot(111)
+                axis.set_xlim([0,len(self.video)])
+                axis.set_ylim([0,self.height])
+                self.axes +=[axis]
+            elif self.var.get() == 3:
+                self.f = Figure(figsize=(10,5), dpi=100)
+                axis = self.f.add_subplot(121)
+                axis.set_xlim([0,len(self.video)])
+                axis.set_ylim([0,self.width])
+                self.axes +=[axis]
+                axis = self.f.add_subplot(122)
+                axis.set_xlim([0,len(self.video)])
+                axis.set_ylim([0,self.height])
+                self.axes += [axis]
+            
+            self.canvas = FigureCanvasTkAgg(self.f, master=self.root)
+            self.canvas.show()
+            self.canvas.draw()
+            self.canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
+
+            if self.var.get() == 1:
+                self.lines = [self.axes[0].plot(self.tCoords,self.xCoords,'ro',animated=True)[0]]
+            elif self.var.get() == 2:
+                self.lines = [self.axes[0].plot(self.tCoords,self.yCoords,'ro',animated=True)[0]]
+            elif self.var.get() == 3:
+                self.lines = [self.axes[0].plot(self.tCoords,self.xCoords,'ro',animated=True)[0],self.axes[1].plot(self.tCoords,self.yCoords,'ro',animated=True)[0]]
+                self.backgrounds = [self.f.canvas.copy_from_bbox(ax.bbox) for ax in self.axes]
+        
+        self.bottom = Label(master=self.root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
+        self.bottom.grid(row=3, column=0, columnspan=4)
         slider_width = self.image_label.winfo_width()
         self.w = Scale(master=self.root, from_=0, to=len(self.video), orient=HORIZONTAL, length=slider_width)
         self.w.bind("<ButtonRelease-1>", lambda event: self.moved())
         self.w.grid(row=1, column=0, columnspan=4)
-        
-        self.image_label.bind('<Button-1>',self.on_mouse)
-        
-        
-        self.axes = []
-        self.f = Figure(figsize=(5,5), dpi=100)
-        if self.var.get()==1:
-            axis = self.f.add_subplot(111)
-            axis.set_xlim([0,len(self.video)])
-            axis.set_ylim([0,self.width])
-            self.axes +=[axis]
-        elif self.var.get() == 2:
-            axis = self.f.add_subplot(111)
-            axis.set_xlim([0,len(self.video)])
-            axis.set_ylim([0,self.height])
-            self.axes +=[axis]
-        elif self.var.get() == 3:
-            self.f = Figure(figsize=(10,5), dpi=100)
-            axis = self.f.add_subplot(121)
-            axis.set_xlim([0,len(self.video)])
-            axis.set_ylim([0,self.width])
-            self.axes +=[axis]
-            axis = self.f.add_subplot(122)
-            axis.set_xlim([0,len(self.video)])
-            axis.set_ylim([0,self.height])
-            self.axes += [axis]
-        
-        self.canvas = FigureCanvasTkAgg(self.f, master=self.root)
-        self.canvas.show()
-        self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=0, column=4, rowspan=4)
-
-        if self.var.get() == 1:
-            self.lines = [self.axes[0].plot(self.tCoords,self.xCoords,'ro',animated=True)[0]]
-        elif self.var.get() == 2:
-            self.lines = [self.axes[0].plot(self.tCoords,self.yCoords,'ro',animated=True)[0]]
-        elif self.var.get() == 3:
-            self.lines = [self.axes[0].plot(self.tCoords,self.xCoords,'ro',animated=True)[0],self.axes[1].plot(self.tCoords,self.yCoords,'ro',animated=True)[0]]
-            self.backgrounds = [self.f.canvas.copy_from_bbox(ax.bbox) for ax in self.axes]
-        
-        self.bottom = Label(master=self.root, text="Click on the center of the circle. Move the trackbar if the object is not on the frame yet")
-        self.bottom.grid(row=3, column=0, columnspan=4)
 
     def updateCurrentFrame(self):
         self.currentFrame = self.w.get()

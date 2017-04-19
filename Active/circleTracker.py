@@ -23,8 +23,8 @@ class CircleTracker(Tracker):
                 for x,y,r in circles:
                     if self.normal(x,y,r):
                         found = True
-                        self.insert(x,y,r,currentFrame)
-                        cv2.circle(frame, (x, y), r+5, (228, 20, 20), 4) #draw circle on image
+                        self.insert(x,y,r+10,currentFrame)
+                        cv2.circle(frame, (x, y), r+10, (228, 20, 20), 4) #draw circle on image
                         cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1) #draw rectangle on center
                         self.lastFrameWith = currentFrame
                 if not found:

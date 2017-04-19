@@ -27,6 +27,7 @@ class CircleWindow(MainWindow):
         self.frame = self.video[self.currentFrame]
         x = None
         y = None
+        fr = None
         lost = False
         if self.height == 0:
            self.height = len(self.frame)
@@ -38,7 +39,7 @@ class CircleWindow(MainWindow):
        
         #find new circles if new frame and not paused
         elif not self.pause and self.first is not None:
-            self.frame,lost,x,y = self.tracker.find(self.frame,self.currentFrame,self.pause)
+            fr,lost,x,y = self.tracker.find(self.frame,self.currentFrame,self.pause)
             if lost:
                 self.bottom.config(text='Circle is lost. Please click on the center')
                 self.pauseVideo()
@@ -62,7 +63,9 @@ class CircleWindow(MainWindow):
                 self.f.canvas.blit(ax.bbox)
                 self.backgrounds = [self.f.canvas.copy_from_bbox(ax.bbox) for ax in self.axes]
        
-        im = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        if fr is None:
+            fr = self.frame
+        im = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
         a = Image.fromarray(im)
         b = ImageTk.PhotoImage(image=a)
         self.image_label.configure(image=b)
@@ -101,10 +104,6 @@ class CircleWindow(MainWindow):
         self.dataButton.grid(row = 4, column = 0)
         
         self.update_image()
-        slider_width = self.image_label.winfo_width()
-        self.w = Scale(master=self.root, from_=0, to=len(self.video), orient=HORIZONTAL, length=slider_width)
-        self.w.bind("<ButtonRelease-1>", lambda event: self.moved())
-        self.w.grid(row=1, column=0, columnspan=4)
 
 
     def on_mouse(self,event):
@@ -126,16 +125,15 @@ class CircleWindow(MainWindow):
                 cv2.rectangle(self.frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 self.tracker.lastFrameWith = self.currentFrame
                 #return to normal state
-                self.playVideo()
                 self.bottom.config(text='')
                 if self.first is None:
                     self.first = (self.center[0],self.center[1],self.distance(self.center,self.outside),self.currentFrame)
                     self.makePlaybackButtons()
                 self.center = self.outside = None
+                self.playVideo()
                 
         
             #if first click (center)
             else:
                 self.center = (x,y)
-                cv2.rectangle(self.frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 self.bottom.config(text='Click on the outside of the circle')
