@@ -5,6 +5,7 @@ import PIL
 
 class ColorTracker(Tracker):
 
+    
     def findColor(self,lower, upper, frame, currentFrame):
         lost = False
         
@@ -37,10 +38,9 @@ class ColorTracker(Tracker):
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
                 self.insert(int(x),int(y),int(radius),currentFrame)
-                cv2.circle(frame, (int(x), int(y)), int(radius),
-                    (228, 20, 20), 2)
+                cv2.circle(frame, (int(x), int(y)), int(radius), (228, 20, 20), 2)
                 cv2.rectangle(frame, (int(x) - 5, int(y) - 5), (int(x) + 5, int(y) + 5), (0, 0, 255), -1)
-            
+                self.lastFrameWith = currentFrame
             
             # Bitwise-AND mask and original image
             #res = cv2.bitwise_and(frame,frame, mask= mask)

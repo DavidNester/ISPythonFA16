@@ -537,10 +537,8 @@ def exportData():
     for r in rCoords:
         worksheet.write(currentFrame, 3, r)
         currentFrame += 1
-        
-
-    worksheet.write(0, 5, 'Size of Object: ' + str(size) + 'cm')
     
+    print rCoords
     #centimeters / pixel
     centConversion = (size*1.0)/(tracker.getRadius()*1.0)
     
