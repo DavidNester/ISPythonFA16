@@ -18,7 +18,7 @@ class CircleWindow(MainWindow):
         self.tracker = CircleTracker()
         self.video = video
         super(CircleWindow, self).__init__()
-        self.root.wm_title("Color Tracker")
+        self.root.wm_title("Circle Tracker")
 
     def reset(self):
         self.root.destroy()
@@ -80,34 +80,6 @@ class CircleWindow(MainWindow):
             self.pauseVideo()
             self.bottom.config(text='Click on the center of the circle')
         self.updateCurrentFrame()
-
-    def makePlaybackButtons(self):
-        # pause button
-        self.pauseButton = Button(master=self.root, text='Pause', command=self.pauseVideo)
-        self.pauseButton.grid(row=2, column=0)
-            
-        #play button
-        self.playButton = Button(master=self.root, text='Play', command= self.playVideo)
-        self.playButton.grid(row=2, column=1)
-        
-        #slow down
-        self.slowButton = Button(master=self.root, text='Slow Down', command=self.slowDown)
-        self.slowButton.grid(row=2, column=2)
-        
-        #fast forward
-        self.fastButton = Button(master=self.root, text='Speed Up', command=self.fastForward)
-        self.fastButton.grid(row=2, column=3)
-        
-        #export button
-        self.export = Button(master=self.root, text='Export', command= self.exportData)
-        self.export.grid(row = 4, column = 1)
-        
-        #interactive data mode button
-        self.dataButton = Button(master=self.root, text='Data Mode', command=self.dataMode)
-        self.dataButton.grid(row = 4, column = 0)
-        
-        self.update_image()
-
 
     def on_mouse(self,event):
         x=event.x

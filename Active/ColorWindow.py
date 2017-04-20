@@ -16,10 +16,16 @@ class ColorWindow(MainWindow):
     def __init__(self,video):
         self.tracker = ColorTracker()
         self.e1 = None
+        self.video = video
         self.upper_threshold = 0
         self.lower_threshold = 0
-        super(ColorWindow, self).__init__(video)
-    
+        super(ColorWindow, self).__init__()
+        self.root.wm_title("Circle Tracker")
+
+    def reset(self):
+        self.root.destroy()
+        self.__init__(self.video)
+
     def submitThreshold(self,intensity,master):
         self.lower_threshold = int(intensity) - int(self.e1.get())
         if self.lower_threshold<0:
@@ -39,6 +45,12 @@ class ColorWindow(MainWindow):
         b = ImageTk.PhotoImage(image=np.hstack([img, output]))
         panel.configure(image=b)
         master.update()
+    def moved(self):
+        if self.w.get() not in self.tracker.coords.keys():
+            self.pauseVideo()
+            self.bottom.config(text='Click on the center of the circle')
+        self.updateCurrentFrame()
+    
     def on_mouse(self,event):
         x=event.x
         y=event.y

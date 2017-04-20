@@ -2,7 +2,7 @@ from Tkinter import *
 import tkFileDialog
 import matplotlib
 import numpy as np
-from scipy.interpolate import CubicSpline
+#from scipy.interpolate import CubicSpline
 from scipy.interpolate import UnivariateSpline
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
