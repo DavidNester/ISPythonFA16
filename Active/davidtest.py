@@ -392,41 +392,7 @@ def reset():
     global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
 
     pass
-""" Save for when window session becomes an object
-def reset():
-    global radio,currentFrame,size,speed, var,plot,xCoords,rCoords,yCoords,tCoords,size_pixel,r_pixel,var,f,xAxis,yAxis,fps,xdistance_cm,ydistance_cm,xdistance_in,ydistance_in,center,outside,first,bottom,frame,pause, xLine,yLine,tracker
-    radio = 0
-    currentFrame = 1
-    size = 120
-    speed = 0
-    plot = False
-    xCoords = []
-    yCoords = []
-    rCoords = []
-    tCoords = []
-    size_pixel = 0
-    r_pixel = 0
-    var  = 0
-    f = ""
-    xAxis = ""
-    yAxis = ""
-    fps = 123
-    xdistance_cm = 0
-    xdistance_in = 0
-    ydistance_cm = 0
-    ydistance_in = 0
-    center = None
-    outside = None
-    first = None
-    bottom = ''
-    frame = ''
-    pause = True
-    xLine = 0
-    yLine = 0
-    tracker = CircleTracker()
-    color_tracker = ColorTracker()
-    update_all(root,image_label,video)
-"""
+
 def submitData():
     global size, bottom, input, information, submit,xPlot,yPlot,bothPlot,noPlot,displayPlot
     size = float(input.get())

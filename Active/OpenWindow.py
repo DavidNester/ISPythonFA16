@@ -78,7 +78,6 @@ class OpenWindow(object):
 
     def open(self):
         selection = self.type.get()
-        print selection
        
         """INPUT FILE"""
         currdir = os.getcwd() #sets current directory
