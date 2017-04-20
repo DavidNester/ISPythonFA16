@@ -30,13 +30,13 @@ class OpenWindow(object):
         self.type = IntVar()
         self.holder = Frame(master=self.openWin)
 
-        self.circleButton = Radiobutton(master=self.holder, text="Circle Track", variable=type, value=0)
+        self.circleButton = Radiobutton(master=self.holder, text="Circle Track", variable=self.type, value=0)
         self.circleButton.grid(row=0, column=0)
 
-        self.colorButton = Radiobutton(master=self.holder, text="Color Track", variable=type, value=1)
+        self.colorButton = Radiobutton(master=self.holder, text="Color Track", variable=self.type, value=1)
         self.colorButton.grid(row=0, column=1, padx = 150)
 
-        self.bothButton = Radiobutton(master=self.holder, text="Both", variable=type, value=2)
+        self.bothButton = Radiobutton(master=self.holder, text="Both", variable=self.type, value=2)
         self.bothButton.grid(row=0, column=2)
 
         self.openVideo = Button(master=self.holder, text="Open Video...", command=self.open)

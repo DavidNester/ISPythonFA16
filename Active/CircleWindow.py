@@ -3,7 +3,7 @@ import tkFileDialog
 import matplotlib
 import numpy as np
 import cv2
-from scipy.interpolate import CubicSpline
+#from scipy.interpolate import CubicSpline
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg

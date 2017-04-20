@@ -512,33 +512,7 @@ def exportData():
     worksheet.write(0, 3, 'Radius')
 
     worksheet.write(0, 5, 'Size of Object: ' + str(size) + "cm")
-     
-     
-    frames = tracker.getTCoords()
-    currentFrame = 1
-    for f in frames:
-        worksheet.write(currentFrame, 0, f)
-        currentFrame += 1
-          
-    xCoords = tracker.getXCoords()
-    currentFrame = 1
-    for x in xCoords:
-        worksheet.write(currentFrame, 1, x)
-        currentFrame += 1
-       
-    currentFrame = 1
-    yCoords = tracker.getYCoords()
-    for y in yCoords:
-       worksheet.write(currentFrame, 2, y)
-       currentFrame += 1
-        
-    currentFrame = 1
-    rCoords = tracker.getRCoords()
-    for r in rCoords:
-        worksheet.write(currentFrame, 3, r)
-        currentFrame += 1
     
-    print rCoords
     #centimeters / pixel
     centConversion = (size*1.0)/(tracker.getRadius()*1.0)
     
