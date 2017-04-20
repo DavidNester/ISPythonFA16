@@ -8,6 +8,7 @@ import tkFileDialog
 import os
 import cv2.cv as cv
 
+
 from colorTracker import ColorTracker
 from Window import MainWindow
 from CircleWindow import CircleWindow
@@ -46,16 +47,42 @@ class OpenWindow(object):
         self.openWin.lift()
         self.openWin.attributes('-topmost',True)
         self.openWin.after_idle(self.openWin.attributes,'-topmost',False)
+    
+    def image_capture(self):
+        vidFile = cv2.VideoCapture(self.tempdir)
+        process = Tk()
+        process.withdraw() #use to hide tkinter window
+        process = Toplevel()
+        title = Label(master = process, text = "Processing")
+        title.config(font=("Courier", 30))
+        title.grid(row=0, column=0, padx=100, pady=50)
+        process.after(0)
+        counter1 = 0
+        counter2 = 0
+        while True:
+            if counter1 > 10:
+                counter1 = -1
+                title.config(text="Processing" + ("."*counter2))
+                if counter2 > 4:
+                    counter2 = -1
+                counter2 += 1
+            counter1 += 1
+            try:
+                flag, frame=vidFile.read()
+                if flag==0:
+                    break
+                self.video.append(frame)
+            except:
+                continue
+        process.destroy()
 
     def open(self):
         selection = self.type.get()
-        self.holder.destroy()
-        self.title.destroy()
        
         """INPUT FILE"""
         currdir = os.getcwd() #sets current directory
         self.tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV"), ("HTML files", "*.html;*.htm"),("All files", "*.*"))) #requests file name and type of files
-        p = self.image_capture()
+        self.image_capture()
         if selection == 0:
             main = CircleWindow(self.video)
         if selection == 1:
@@ -65,16 +92,5 @@ class OpenWindow(object):
             main2 = ColorWindow(self.video)
 
         self.openWin.destroy()
-
-    def image_capture(self):
-        vidFile = cv2.VideoCapture(self.tempdir)
-        while True:
-            try:
-                flag, frame=vidFile.read()
-                if flag==0:
-                    break
-                self.video.append(frame)
-            except:
-                continue
 
 

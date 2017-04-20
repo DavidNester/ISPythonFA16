@@ -16,7 +16,9 @@ class CircleWindow(MainWindow):
 
     def __init__(self,video):
         self.tracker = CircleTracker()
-        super(CircleWindow, self).__init__(video)
+        self.video = video
+        super(CircleWindow, self).__init__()
+        self.root.wm_title("Color Tracker")
 
     def reset(self):
         self.root.destroy()
@@ -26,19 +28,19 @@ class CircleWindow(MainWindow):
         self.frame = self.video[self.currentFrame]
         x = None
         y = None
-        fr = None
+        r = None
         lost = False
         if self.height == 0:
            self.height = len(self.frame)
            self.width = len(self.frame[0])
        
-       #if we already have the frame in memory then use circles that were found
+        #if we already have the frame in memory then use circles that were found
         if self.currentFrame in self.tracker.coords.keys():
            x,y,r = self.tracker.coords[self.currentFrame]
        
         #find new circles if new frame and not paused
         elif not self.pause and self.first is not None:
-            fr,lost,x,y = self.tracker.find(self.frame,self.currentFrame,self.pause)
+            lost,x,y,r = self.tracker.find(self.frame,self.currentFrame,self.pause)
             if lost:
                 self.bottom.config(text='Circle is lost. Please click on the center')
                 self.pauseVideo()
@@ -61,9 +63,11 @@ class CircleWindow(MainWindow):
                 ax.draw_artist(line)
                 self.f.canvas.blit(ax.bbox)
                 self.backgrounds = [self.f.canvas.copy_from_bbox(ax.bbox) for ax in self.axes]
-       
-        if fr is None:
-            fr = self.frame
+        fr = self.frame.copy()
+        if x:
+            cv2.circle(fr, (x, y), r, (228, 20, 20), 4)
+            cv2.rectangle(fr, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+               
         im = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
         a = Image.fromarray(im)
         b = ImageTk.PhotoImage(image=a)
@@ -79,11 +83,11 @@ class CircleWindow(MainWindow):
 
     def makePlaybackButtons(self):
         # pause button
-        self.pauseButton = Button(master=self.root, text="Pause", command=self.pauseVideo)
+        self.pauseButton = Button(master=self.root, text='Pause', command=self.pauseVideo)
         self.pauseButton.grid(row=2, column=0)
             
         #play button
-        self.playButton = Button(master=self.root, text="Play", command= self.playVideo)
+        self.playButton = Button(master=self.root, text='Play', command= self.playVideo)
         self.playButton.grid(row=2, column=1)
         
         #slow down
@@ -120,8 +124,6 @@ class CircleWindow(MainWindow):
                 x,y = self.center
                 r = self.distance(self.center,self.outside)
                 self.tracker.insert(x,y,r,self.currentFrame)
-                cv2.circle(self.frame, (x, y), r, (228, 20, 20), 4)
-                cv2.rectangle(self.frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
                 self.tracker.lastFrameWith = self.currentFrame
                 #return to normal state
                 self.bottom.config(text='')
@@ -130,8 +132,6 @@ class CircleWindow(MainWindow):
                     self.makePlaybackButtons()
                 self.center = self.outside = None
                 self.playVideo()
-                
-        
             #if first click (center)
             else:
                 self.center = (x,y)

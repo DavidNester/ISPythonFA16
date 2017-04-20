@@ -9,18 +9,19 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 from PIL import Image, ImageTk
 import xlwt
+import cv2
+
 
 
 from InteractiveDataWindow import InteractiveDataWindow
 
 class MainWindow(object):
 
-    def __init__(self,video):
+    def __init__(self):
         self.root = Tk()
         self.root.withdraw()
         self.root = Toplevel()
-    
-        self.video = video
+        
         self.image_label = Label(master=self.root) #label for the video frame
         self.image_label.grid(row=0, column=0, columnspan=4)
    
@@ -41,7 +42,7 @@ class MainWindow(object):
         self.w = None
         self.height = 0
         self.width = 0
-        self.fps = 123
+        self.fps = 0
         self.center = None
         self.outside = None
         self.first = None
@@ -73,32 +74,35 @@ class MainWindow(object):
         self.reset.grid(row = 5, column = 2)
     
     def submitData(self):
-        self.tracker.setSize(float(self.input.get()))
-        self.tracker.setFPS(float(self.fpsinput.get()))
-        self.information.destroy()
-        self.input.destroy()
-        self.fpsinput.destroy()
-        self.fpsInfo.destroy()
-        self.submit.destroy()
+        try:
+            self.tracker.setSize(float(self.input.get()))
+            self.tracker.setFPS(float(self.fpsinput.get()))
+            self.information.destroy()
+            self.input.destroy()
+            self.fpsinput.destroy()
+            self.fpsInfo.destroy()
+            self.submit.destroy()
 
-        self.holder = Frame(master=self.root)
-        self.var = IntVar()
-        
-        self.noPlot = Radiobutton(master=self.holder, text="No Live Plots", variable=self.var, value=0)
-        self.noPlot.pack(side="left")
-        
-        self.xPlot = Radiobutton(master=self.holder, text="X Axis", variable=self.var, value=1)
-        self.xPlot.pack(side="left")
-        
-        self.yPlot = Radiobutton(master=self.holder, text="Y Axis", variable=self.var, value=2)
-        self.yPlot.pack(side="left")
-        
-        self.bothPlot = Radiobutton(master=self.holder, text="Both Axis", variable=self.var, value=3)
-        self.bothPlot.pack(side="left")
-        
-        self.displayPlot = Button(master=self.holder, text="Submit", command=self.displayChoice)
-        self.displayPlot.pack(side="bottom", fill = "x")
-        self.holder.grid(row=3, column=1, columnspan=4)
+            self.holder = Frame(master=self.root)
+            self.var = IntVar()
+            
+            self.noPlot = Radiobutton(master=self.holder, text="No Live Plots", variable=self.var, value=0)
+            self.noPlot.pack(side="left")
+            
+            self.xPlot = Radiobutton(master=self.holder, text="X Axis", variable=self.var, value=1)
+            self.xPlot.pack(side="left")
+            
+            self.yPlot = Radiobutton(master=self.holder, text="Y Axis", variable=self.var, value=2)
+            self.yPlot.pack(side="left")
+            
+            self.bothPlot = Radiobutton(master=self.holder, text="Both Axis", variable=self.var, value=3)
+            self.bothPlot.pack(side="left")
+            
+            self.displayPlot = Button(master=self.holder, text="Submit", command=self.displayChoice)
+            self.displayPlot.pack(side="bottom", fill = "x")
+            self.holder.grid(row=3, column=1, columnspan=4)
+        except:
+            print "Try Again" #will update to a real message box
 
     def displayChoice(self):
         self.holder.destroy()

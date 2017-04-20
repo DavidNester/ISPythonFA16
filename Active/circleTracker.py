@@ -8,9 +8,10 @@ class CircleTracker(Tracker):
         lost = False
         x = None
         y = None
+        r = None
         if currentFrame-self.lastFrameWith > 10:
           lost = True
-          return frame, lost, x,y
+          return lost,x,y,r
         image = self.processImage(frame)
         found = False
         alpha = 90
@@ -24,8 +25,6 @@ class CircleTracker(Tracker):
                     if self.normal(x,y,r):
                         found = True
                         self.insert(x,y,r+10,currentFrame)
-                        cv2.circle(frame, (x, y), r+10, (228, 20, 20), 4) #draw circle on image
-                        cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1) #draw rectangle on center
                         self.lastFrameWith = currentFrame
                 if not found:
                     alpha -= 5
@@ -39,7 +38,7 @@ class CircleTracker(Tracker):
         #if we havent found a circle in more than 10 frames then ask the user for help
         if abs(currentFrame-self.lastFrameWith) > 10:
                 lost = True
-        return frame, lost, x,y
+        return lost,x,y,r+10
 
     def processImage(self,frame):
         original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale
