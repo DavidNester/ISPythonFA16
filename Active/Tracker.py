@@ -98,9 +98,32 @@ class Tracker:
 
     def setFPS(self,fps):
         self.fps = fps
+    
     def setSize(self,size):
         self.size = size
+    
     def getFPS(self):
         return self.fps
+    
     def getSize(self):
         return self.size
+
+    def scaleT(self):
+        return [(fr*1.0)/self.getFPS() for fr in self.getTCoords()]
+
+    def scaleX(self):
+        return [((coord-self.xMin())*self.getSize())/(self.getRadius()) for coord in self.getXCoords()]
+
+    def scaleY(self):
+        return [((coord-self.yMin())*self.getSize())/(self.getRadius()) for coord in self.getYCoords()]
+                     
+    def scaleR(self):
+        return [(coord*self.getSize())/(self.getRadius()) for coord in self.getRCoords()]
+
+    def scaleXVelocity(self):
+        x,y = self.xVelocity()
+        return [(fr*1.0)/self.getFPS() for fr in x],[(coord-min(y))*((self.getSize()*1.0)/self.getRadius()) for coord in y]
+
+    def scaleYVelocity(self):
+        x,y = self.xVelocity()
+        return [(fr*1.0)/self.getFPS() for fr in x],[(coord-min(y))*((self.getSize()*1.0)/self.getRadius()) for coord in y]

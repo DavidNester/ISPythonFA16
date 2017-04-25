@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 from PIL import Image, ImageTk
 import xlwt
 import cv2
+import time
 
 from InteractiveDataWindow import InteractiveDataWindow
 
@@ -197,7 +198,7 @@ class MainWindow(object):
     def create_slider(self):
         slider_width = self.image_label.winfo_width()
         self.w = Scale(master=self.root, from_=0, to=len(self.video), orient=HORIZONTAL, length=slider_width)
-        self.w.bind("<ButtonRelease-1>", lambda event: self.moved())
+        self.w.bind('<ButtonRelease-1>', lambda event: self.moved())
         self.w.grid(row=1, column=0, columnspan=4)
 
     def updateCurrentFrame(self):
@@ -221,30 +222,28 @@ class MainWindow(object):
         workbook = xlwt.Workbook()
         worksheet = workbook.add_sheet('Data')
         worksheet.write(0, 0, 'Frame')
-        worksheet.write(0, 1, 'X Axis')
-        worksheet.write(0, 2, 'Y Axis')
-        worksheet.write(0, 3, 'Radius')
+        worksheet.write(0, 1, 'X Pixel')
+        worksheet.write(0, 2, 'Y Frame')
+        worksheet.write(0, 3, 'Radius (pixels)')
+        worksheet.write(0, 5, 'Second')
+        worksheet.write(0, 6, 'X cm')
+        worksheet.write(0, 7, 'Y cm')
+        worksheet.write(0, 8, 'Radius (cm)')
         
-        worksheet.write(0, 5, 'Size of Object: ' + str(self.size) + "cm")
+        worksheet.write(0, 4, 'Size of Object: ' + str(self.tracker.getSize()) + 'cm')
+        worksheet.write(1, 4, 'FPS: ' + str(self.tracker.getFPS()))
         
         count = 1
-        for t,x,y,r in zip(self.tracker.getTCoords(),self.tracker.getXCoords(),self.tracker.getYCoords(),self.tracker.getRCoords()):
+        for t,x,y,r,st,sx,sy,sr in zip(self.tracker.getTCoords(),self.tracker.getXCoords(),self.tracker.getYCoords(),self.tracker.getRCoords(),self.tracker.scaleT(),self.tracker.scaleX(),self.tracker.scaleY(),self.tracker.scaleR()):
             worksheet.write(count, 0, t)
             worksheet.write(count, 1, x)
             worksheet.write(count, 2, y)
             worksheet.write(count, 3, r)
+            worksheet.write(count, 5, st)
+            worksheet.write(count, 6, sx)
+            worksheet.write(count, 7, sy)
+            worksheet.write(count, 8, sr)
             count += 1
-
-        
-        #centimeters / pixel
-        #conversions taken care of somewhere else. I (David) will take care of this. Still need to add conversions to the sheet
-        centConversion = (self.size*1.0)/(self.tracker.getRadius()*1.0)
-        
-        xdistance_cm = (self.tracker.xMax() - self.tracker.xMin()) * centConversion
-        ydistance_cm = (self.tracker.yMax() - self.tracker.yMin()) * centConversion
-        
-        xdistance_in = xdistance_cm/2.54#could be more exact in the future
-        xdistance_in = xdistance_cm/2.54#could be more exact in the future
         
         file_name = tkFileDialog.asksaveasfile(mode='a', defaultextension=".xls")
         workbook.save(file_name.name)
@@ -286,3 +285,5 @@ class MainWindow(object):
     def moved(self):
         print 'Must be implemented by child'
         pass
+    def reset():
+        print 'this is wrong'

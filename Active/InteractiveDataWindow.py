@@ -74,6 +74,7 @@ class InteractiveDataWindow:
         plt.figure(num)
         plt.plot(x,y,'ro')
         plt.show()
+    
     """Gets data to send to plotting function - probably some refactoring that could be done - one for each button"""
     """**********************************************************************"""
 
@@ -116,45 +117,17 @@ class InteractiveDataWindow:
         plt.show()
 
     def scaleX(self):
-        x = self.tracker.getTCoords()
-        y = self.tracker.getXCoords()
-        newX = []
-        newY = []
-        for coord in y:
-            newY += [(coord-self.tracker.xMin())*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
-        for fr in x:
-            newX += [(fr*1.0)/self.tracker.getFPS()]
-        self.plotData(newX,newY,12)
+        self.plotData(self.tracker.scaleT(),self.tracker.scaleX(),12)
 
     def scaleY(self):
-        x = self.tracker.getTCoords()
-        y = self.tracker.getYCoords()
-        newX = []
-        newY = []
-        for coord in y:
-            newY += [(coord-self.tracker.yMin())*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
-        for fr in x:
-            newX += [(fr*1.0)/self.tracker.getFPS()]
-        self.plotData(newX,newY,13)
+        self.plotData(self.tracker.scaleT(),self.tracker.scaleY(),13)
 
     def scaleXVelocity(self):
-        x,y = self.tracker.xVelocity()
-        newX = []
-        newY = []
-        for coord in y:
-            newY += [(coord-min(y))*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
-        for fr in x:
-            newX += [(fr*1.0)/self.tracker.getFPS()]
-        self.plotData(newX,newY,14)
+        x,y = self.tracker.scaleXVelocity()
+        self.plotData(x,y,14)
 
     def scaleYVelocity(self):
-        x,y = self.tracker.yVelocity()
-        newX = []
-        newY = []
-        for coord in y:
-            newY += [(coord-min(y))*((self.tracker.getSize()*1.0)/self.tracker.getRadius())]
-        for fr in x:
-            newX += [(fr*1.0)/self.tracker.getFPS()]
-        self.plotData(newX,newY,15)
-
+        x,y = self.tracker.scaleYVelocity()
+        self.plotData(x,y,15)
+    """**********************************************************************"""
 

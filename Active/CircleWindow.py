@@ -72,7 +72,7 @@ class CircleWindow(MainWindow):
         if x:
             cv2.circle(fr, (x, y), r, (228, 20, 20), 4)
             cv2.rectangle(fr, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-               
+
         im = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
         a = Image.fromarray(im)
         b = ImageTk.PhotoImage(image=a)
@@ -91,7 +91,6 @@ class CircleWindow(MainWindow):
     def on_mouse(self,event):
         x=event.x
         y=event.y
-
         #only use if paused (paused when nothing is found)'
         if self.pause:
             if self.center is not None: #if second click (outside)
