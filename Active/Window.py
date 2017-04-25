@@ -106,7 +106,13 @@ class MainWindow(object):
             self.displayPlot.pack(side="bottom", fill = "x")
             self.holder.grid(row=3, column=1, columnspan=4)
         except:
-            print "Try Again" #will update to a real message box
+            master = Tk()
+            master.withdraw()
+            master = Toplevel()
+            error = Label(master = master, text = 'Please enter numbers in both boxes')
+            error.grid(row=0, column=0)
+            error.after(0)
+
 
     """creates buttons that allo playback control of the video as well as data viewing options"""
     def makePlaybackButtons(self):

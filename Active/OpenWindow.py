@@ -66,7 +66,12 @@ class OpenWindow(object):
                 main1 = CircleWindow(self.video)
                 main2 = ColorWindow(self.video)
         else:
-            print 'no file selected' #need to make a real error statement
+            master = Tk()
+            master.withdraw()
+            master = Toplevel()
+            error = Label(master = master, text = 'No File Selected')
+            error.grid(row=0, column=0)
+            error.after(0)
     
 
 
@@ -77,7 +82,6 @@ class OpenWindow(object):
         """***********************"""
         process = Tk()
         process.withdraw() #use to hide tkinter window
-        process.grid_propagate(False)
         process = Toplevel()
         process.minsize(width=180, height=100)
         title = Label(master = process, text = 'Processing')
