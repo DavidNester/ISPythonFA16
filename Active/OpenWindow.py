@@ -52,18 +52,22 @@ class OpenWindow(object):
     """When 'open' button is clicked - opens a directory window to choose video"""
     def open(self):
         selection = self.type.get()
-        self.openWin.destroy()
         """INPUT FILE"""
         currdir = os.getcwd() #sets current directory
         self.tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV"), ("HTML files", "*.html;*.htm"),("All files", "*.*"))) #requests file name and type of files
-        self.image_capture() #create video array
-        if selection == 0:
-            main = CircleWindow(self.video)
-        if selection == 1:
-            main = ColorWindow(self.video)
-        if selection == 2:
-            main1 = CircleWindow(self.video)
-            main2 = ColorWindow(self.video)
+        if self.tempdir:
+            self.image_capture() #create video array
+            self.tempdir = None
+            if selection == 0:
+                main = CircleWindow(self.video)
+            if selection == 1:
+                main = ColorWindow(self.video)
+            if selection == 2:
+                main1 = CircleWindow(self.video)
+                main2 = ColorWindow(self.video)
+        else:
+            print 'no file selected' #need to make a real error statement
+    
 
 
     """takes the video and converts it into an array"""

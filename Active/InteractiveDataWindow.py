@@ -24,13 +24,13 @@ class InteractiveDataWindow:
 
     """make a button for each graph option"""
     def makeButtons(self):
-        self.xButton = Button(master=self.data,text='x', command = self.xData )
+        self.xButton = Button(master=self.data,text='x', command = lambda: self.plotData(self.tracker.getTCoords(),self.tracker.getXCoords(),1))
         self.xButton.grid(row=0,column=0,columnspan=2)
         
-        self.yButton = Button(master=self.data,text='y', command = self.yData )
+        self.yButton = Button(master=self.data,text='y', command = lambda: self.plotData(self.tracker.getTCoords(),self.tracker.getYCoords(),2))
         self.yButton.grid(row=1,column=0,columnspan=2)
         
-        self.rButton = Button(master=self.data,text='r', command = self.rData )
+        self.rButton = Button(master=self.data,text='r', command = lambda: self.plotData(self.tracker.getTCoords(),self.tracker.getRCoords(),3))
         self.rButton.grid(row=2,column=0,columnspan=2)
         
         self.xVelButton = Button(master=self.data,text='x Velocity', command = self.xVelData)
@@ -76,14 +76,6 @@ class InteractiveDataWindow:
         plt.show()
     """Gets data to send to plotting function - probably some refactoring that could be done - one for each button"""
     """**********************************************************************"""
-    def xData(self):
-        self.plotData(self.tracker.getTCoords(),self.tracker.getXCoords(),1)
-
-    def yData(self):
-        self.plotData(self.tracker.getTCoords(),self.tracker.getYCoords(),2)
-
-    def rData(self):
-        self.plotData(self.tracker.getTCoords(),self.tracker.getRCoords(),3)
 
     def xVelData(self):
         x,y = self.tracker.xVelocity()
