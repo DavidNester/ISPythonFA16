@@ -8,14 +8,15 @@ import tkFileDialog
 import os
 import cv2.cv as cv
 
-
 from colorTracker import ColorTracker
 from Window import MainWindow
 from CircleWindow import CircleWindow
 from ColorWindow import ColorWindow
 
+"""Class for controlling the initial window - opens the proper window afterwards"""
 class OpenWindow(object):
 
+    """Initialize with label, options, and submit button"""
     def __init__(self):
         self.openWin = Tk()
         self.openWin.withdraw() #use to hide tkinter window
@@ -47,42 +48,15 @@ class OpenWindow(object):
         self.openWin.lift()
         self.openWin.attributes('-topmost',True)
         self.openWin.after_idle(self.openWin.attributes,'-topmost',False)
-    
-    def image_capture(self):
-        vidFile = cv2.VideoCapture(self.tempdir)
-        process = Tk()
-        process.withdraw() #use to hide tkinter window
-        process = Toplevel()
-        title = Label(master = process, text = "Processing")
-        title.config(font=("Courier", 30))
-        title.grid(row=0, column=0, padx=100, pady=50)
-        process.after(0)
-        counter1 = 0
-        counter2 = 0
-        while True:
-            if counter1 > 10:
-                counter1 = -1
-                title.config(text="Processing" + ("."*counter2))
-                if counter2 > 4:
-                    counter2 = -1
-                counter2 += 1
-            counter1 += 1
-            try:
-                flag, frame=vidFile.read()
-                if flag==0:
-                    break
-                self.video.append(frame)
-            except:
-                continue
-        process.destroy()
 
+    """When 'open' button is clicked - opens a directory window to choose video"""
     def open(self):
         selection = self.type.get()
-       
+        self.openWin.destroy()
         """INPUT FILE"""
         currdir = os.getcwd() #sets current directory
         self.tempdir = tkFileDialog.askopenfilename( filetypes = (("Movie files", "*.MOV"), ("HTML files", "*.html;*.htm"),("All files", "*.*"))) #requests file name and type of files
-        self.image_capture()
+        self.image_capture() #create video array
         if selection == 0:
             main = CircleWindow(self.video)
         if selection == 1:
@@ -91,6 +65,44 @@ class OpenWindow(object):
             main1 = CircleWindow(self.video)
             main2 = ColorWindow(self.video)
 
-        self.openWin.destroy()
 
-
+    """takes the video and converts it into an array"""
+    def image_capture(self):
+        vidFile = cv2.VideoCapture(self.tempdir)
+        """Processing Window"""
+        """***********************"""
+        process = Tk()
+        process.withdraw() #use to hide tkinter window
+        process.grid_propagate(False)
+        process = Toplevel()
+        process.minsize(width=180, height=100)
+        title = Label(master = process, text = 'Processing')
+        dots = Label(master = process, text = '')
+        title.config(font=("Courier", 30))
+        dots.config(font=("Courier", 30))
+        title.grid(row=0, column=0)
+        dots.grid(row=1,column=0)
+        process.after(0)
+        counter1 = 0
+        counter2 = 0
+        """***********************"""
+        while True:
+            """Processing Window"""
+            """***********************"""
+            if counter1 > 10:
+                counter1 = -1
+                dots.config(text='.'*counter2)
+                if counter2 > 4:
+                    counter2 = -1
+                counter2 += 1
+            counter1 += 1
+            process.update()
+            """***********************"""
+            try:
+                flag, frame=vidFile.read()
+                if flag==0:
+                    break
+                self.video.append(frame)
+            except:
+                continue
+        process.destroy()

@@ -11,8 +11,10 @@ from matplotlib.figure import Figure
 
 from circleTracker import CircleTracker
 
+"""Window for displaying the different graphs"""
 class InteractiveDataWindow:
 
+    """Constructor - needs to be provided with a tracker"""
     def __init__(self,tracker):
         self.tracker = tracker
         self.data = Tk()
@@ -20,6 +22,7 @@ class InteractiveDataWindow:
         self.data = Toplevel()
         self.makeButtons()
 
+    """make a button for each graph option"""
     def makeButtons(self):
         self.xButton = Button(master=self.data,text='x', command = self.xData )
         self.xButton.grid(row=0,column=0,columnspan=2)
@@ -66,37 +69,48 @@ class InteractiveDataWindow:
         self.scaleYVelButton = Button(master=self.data,text='Scale Y Velocity', command = self.scaleYVelocity)
         self.scaleYVelButton.grid(row=3,column=4,columnspan=2)
 
-
+    """Plots data given a list of coordinates"""
     def plotData(self,x,y,num):
         plt.figure(num)
         plt.plot(x,y,'ro')
         plt.show()
-
+    """Gets data to send to plotting function - probably some refactoring that could be done - one for each button"""
+    """**********************************************************************"""
     def xData(self):
         self.plotData(self.tracker.getTCoords(),self.tracker.getXCoords(),1)
+
     def yData(self):
         self.plotData(self.tracker.getTCoords(),self.tracker.getYCoords(),2)
+
     def rData(self):
         self.plotData(self.tracker.getTCoords(),self.tracker.getRCoords(),3)
+
     def xVelData(self):
         x,y = self.tracker.xVelocity()
         self.plotData(x,y,4)
+
     def yVelData(self):
         x,y = self.tracker.yVelocity()
         self.plotData(x,y,5)
+
     def xAccData(self):
         x,y = self.tracker.xAcceleration()
         self.plotData(x,y,6)
+
     def yAccData(self):
         x,y = self.tracker.yAcceleration()
         self.plotData(x,y,7)
+
     def fitX(self):
         self.trendline(self.tracker.getTCoords(),self.tracker.getXCoords(),8)
+
     def fitY(self):
         self.trendline(self.tracker.getTCoords(),self.tracker.getYCoords(),9)
+
     def fitXVelocity(self):
         x,y = self.tracker.xVelocity()
         self.trendline(x,y,10)
+
     def fitYVelocity(self):
         x,y = self.tracker.yVelocity()
         self.trendline(x,y,11)
@@ -119,6 +133,7 @@ class InteractiveDataWindow:
         for fr in x:
             newX += [(fr*1.0)/self.tracker.getFPS()]
         self.plotData(newX,newY,12)
+
     def scaleY(self):
         x = self.tracker.getTCoords()
         y = self.tracker.getYCoords()
@@ -129,6 +144,7 @@ class InteractiveDataWindow:
         for fr in x:
             newX += [(fr*1.0)/self.tracker.getFPS()]
         self.plotData(newX,newY,13)
+
     def scaleXVelocity(self):
         x,y = self.tracker.xVelocity()
         newX = []
@@ -138,6 +154,7 @@ class InteractiveDataWindow:
         for fr in x:
             newX += [(fr*1.0)/self.tracker.getFPS()]
         self.plotData(newX,newY,14)
+
     def scaleYVelocity(self):
         x,y = self.tracker.yVelocity()
         newX = []

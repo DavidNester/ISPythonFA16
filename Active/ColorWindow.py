@@ -12,8 +12,10 @@ from colorTracker import ColorTracker
 from Window import MainWindow
 import cv2
 
+"""Class that controls window for tracking based on color"""
 class ColorWindow(MainWindow):
 
+    """initialize with color specific variable and then call parent constructor"""
     def __init__(self,video):
         self.tracker = ColorTracker()
         self.e1 = None
@@ -24,6 +26,7 @@ class ColorWindow(MainWindow):
         super(ColorWindow, self).__init__()
         self.root.wm_title("Circle Tracker")
 
+    """Controls the window - updates the image and the graphs"""
     def update_image(self):
         self.frame = self.video[self.currentFrame]
         x = None
@@ -41,7 +44,7 @@ class ColorWindow(MainWindow):
        
         #find new circles if new frame and not paused
         elif not self.pause and self.first is not None:
-            fr,lost,x,y = self.tracker.findColor(self.lower_threshold,self.upper_threshold,self.frame,self.currentFrame)
+            fr,lost,x,y = self.tracker.find(self.lower_threshold,self.upper_threshold,self.frame,self.currentFrame)
             if lost:
                 self.bottom.config(text='Circle is lost. Please click on the center')
                 self.pauseVideo()
@@ -74,17 +77,19 @@ class ColorWindow(MainWindow):
         self.image_label._image_cache = b  #avoid garbage collection
         self.root.update()
 
-
+    """destroy the window and call own constructor again"""
     def reset(self):
         self.root.destroy()
         self.__init__(self.video)
 
+    """give the lower and upper bounds for the HSV values"""
     def submitThreshold(self,lower, upper, master):
-        self.tracker.findColor(lower, upper, self.frame,self.currentFrame)
+        self.tracker.find(lower,upper, self.frame,self.currentFrame)
         master.destroy()
         self.bottom.config(text='')
         self.playVideo()
 
+    """update image to reflect change in thresholds"""
     def updateHSV(self,img, lower, upper, panel, master):
         lower = np.array(lower, dtype = "uint8")
         upper = np.array(upper, dtype = "uint8")
@@ -104,12 +109,14 @@ class ColorWindow(MainWindow):
         else:
             master.update()
 
+    """Called when the slider is moved"""
     def moved(self):
         if self.w.get() not in self.tracker.coords.keys():
             self.pauseVideo()
             self.bottom.config(text='Click on the center of the circle')
         self.updateCurrentFrame()
-    
+
+    """Called when mouse is clicked - opens window to update the HSV values"""
     def on_mouse(self,event):
         x=event.x
         y=event.y
@@ -162,5 +169,3 @@ class ColorWindow(MainWindow):
             upper_v.grid(row=7, column=1)
             Button(master, text='Submit', command=lambda: self.submitThreshold([lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], master)).grid(row=8, column=1, sticky=W, pady=4)
             mainloop( )
-
-

@@ -12,24 +12,29 @@ from PIL import Image, ImageTk
 from circleTracker import CircleTracker
 from Window import MainWindow
 
+
+"""Inherits from window - runs GUI for any window using circle tracking"""
 class CircleWindow(MainWindow):
 
+    """constructor - requires a video"""
     def __init__(self,video):
         self.tracker = CircleTracker()
         self.video = video
-        super(CircleWindow, self).__init__()
+        super(CircleWindow, self).__init__() #Call parent constructor
         self.root.wm_title("Circle Tracker")
 
+    """destroy window and then call constructor"""
     def reset(self):
         self.root.destroy()
         self.__init__(self.video)
-    
+
+    """updates the video, draws the circle, updates the plot"""
     def update_image(self):
         self.frame = self.video[self.currentFrame]
         x = None
         y = None
         r = None
-        lost = False
+        lost = False #if the tracker has lost the circle
         if self.height == 0:
            self.height = len(self.frame)
            self.width = len(self.frame[0])
@@ -49,20 +54,20 @@ class CircleWindow(MainWindow):
         if self.plot and self.first is not None and x is not None:
             items = enumerate(zip(self.lines,self.axes,self.backgrounds),start = 1)
             for j,(line,ax,background) in items:
-                self.f.canvas.restore_region(background)
+                self.f.canvas.restore_region(background) #puts picture of old graph as new graph and only graphs one point
                 if j == 1:
-                    if self.var.get() == 1 or self.var.get() == 3:
+                    if self.var.get() == 1 or self.var.get() == 3: #x graph
                         line.set_ydata(x)
                         line.set_xdata(self.old)
-                    if self.var.get() == 2:
+                    if self.var.get() == 2: #y graph
                         line.set_ydata(y)
                         line.set_xdata(self.old)
-                if j == 2:
+                if j == 2: #y graph
                     line.set_ydata(y)
                     line.set_xdata(self.old)
                 ax.draw_artist(line)
                 self.f.canvas.blit(ax.bbox)
-                self.backgrounds = [self.f.canvas.copy_from_bbox(ax.bbox) for ax in self.axes]
+                self.backgrounds = [self.f.canvas.copy_from_bbox(ax.bbox) for ax in self.axes] #save background
         fr = self.frame.copy()
         if x:
             cv2.circle(fr, (x, y), r, (228, 20, 20), 4)
@@ -75,36 +80,32 @@ class CircleWindow(MainWindow):
         self.image_label._image_cache = b  #avoid garbage collection
         self.root.update()
 
+    """called when the slide bar is moved"""
     def moved(self):
-        if self.w.get() not in self.tracker.coords.keys():
+        if self.w.get() not in self.tracker.coords.keys(): #if it is an unseen frame
             self.pauseVideo()
             self.bottom.config(text='Click on the center of the circle')
         self.updateCurrentFrame()
 
+    """called when the mouse is clicked on the video - used to input center and outside of the circle"""
     def on_mouse(self,event):
         x=event.x
         y=event.y
 
         #only use if paused (paused when nothing is found)'
         if self.pause:
-            #if second click (outside)
-            if self.center is not None:
+            if self.center is not None: #if second click (outside)
                 self.outside = (x,y)
                 if self.var.get() != 0:
                     self.plot = True
-
-                x,y = self.center
-                r = self.distance(self.center,self.outside)
-                self.tracker.insert(x,y,r,self.currentFrame)
+                self.tracker.insert(self.center[0],self.center[1],self.distance(self.center,self.outside),self.currentFrame)
                 self.tracker.lastFrameWith = self.currentFrame
-                #return to normal state
-                self.bottom.config(text='')
+                self.bottom.config(text='')#return to normal state
                 if self.first is None:
                     self.first = (self.center[0],self.center[1],self.distance(self.center,self.outside),self.currentFrame)
                     self.makePlaybackButtons()
                 self.center = self.outside = None
                 self.playVideo()
-            #if first click (center)
-            else:
+            else:#if first click (center)
                 self.center = (x,y)
-                self.bottom.config(text='Click on the outside of the circle')
+                self.bottom.config(text='Click on the outside of the circle') #need second click for outside

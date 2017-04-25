@@ -1,7 +1,7 @@
-
-
+"""Parent class for the trackers"""
 class Tracker:
-
+    
+    """initializes with variables that need to be kept track of no matter the type"""
     def __init__(self):
         #instance variables
         self.lastFrameWith = 0
@@ -13,6 +13,7 @@ class Tracker:
         self.fps = 0
         self.size = 0
     
+    """used to makse sure the circle is the same one that was chosen at the beginning"""
     def normal(self,x,y,r):
         #accept data if we hae no prior knowledge
         if self.lastFrameWith == 0:
@@ -22,7 +23,8 @@ class Tracker:
         if abs(oldX-x) < oldR/2 and abs(oldY-y) < oldR/2 and abs(r-oldR) < oldR/2:
            return True
         return False
-    
+
+    """add the coordinates of a circle to the dictionary and lists"""
     def insert(self,x,y,r,t):
         self.coords[t] = (x,y,r)
         self.xCoords += [x]
@@ -30,7 +32,9 @@ class Tracker:
         self.rCoords += [r]
         self.tCoords += [t]
     
+    """method for finding object using tracker - must be implemented by child"""
     def find(self):
+        print 'find() must be implemented by child class'
         pass
     
     def getXCoords(self):
@@ -61,27 +65,30 @@ class Tracker:
         #we probably want to check how spread out the range is
         return sum(self.rCoords)/len(self.rCoords)
 
-    """Must return tCoords as well because it cuts one off on either end"""
+    """Method for returning the x-velocity of each frame"""
     def xVelocity(self):
+        """Must return tCoords as well because it cuts one off on either end"""
         return self.tCoords[1:len(self.tCoords)-1],self._SimpleVelocity(self.xCoords)
-
+    """Method for returning the y-velocity of each frame"""
     def yVelocity(self):
+        """Must return tCoords as well because it cuts one off on either end"""
         return self.tCoords[1:len(self.tCoords)-1],self._SimpleVelocity(self.yCoords)
-
+    """method for calcualting velocity given position coords (very simplistic)"""
     def _SimpleVelocity(self,coords):
         vel = []
         if len(coords) > 3:
             for i in range(1,len(coords)-1):
                 vel += [((coords[i+1]-coords[i-1])*1.0)/(self.tCoords[i+1]-self.tCoords[i-1])]
         return vel
-
-    """Must return tCoords as well because it cuts one off on either end"""
+    """method for returning x-acceleration"""
     def xAcceleration(self):
+        """Must return tCoords as well because it cuts one off on either end"""
         return self.tCoords[2:len(self.tCoords)-2],self._SimpleAcceleration(self._SimpleVelocity(self.xCoords))
-
+    """method for returning y-acceleration"""
     def yAcceleration(self):
+        """Must return tCoords as well because it cuts one off on either end"""
         return self.tCoords[2:len(self.tCoords)-2],self._SimpleAcceleration(self._SimpleVelocity(self.yCoords))
-
+    """method for calcualting acceleration given velocity coords (very simplistic)"""
     def _SimpleAcceleration(self,vel):
         acc = []
         if len(vel) > 3:

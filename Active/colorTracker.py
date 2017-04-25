@@ -5,8 +5,8 @@ import PIL
 
 class ColorTracker(Tracker):
 
-    
-    def findColor(self,lower, upper, frame, currentFrame):
+    """Finds the circle usign the color based methods - Returns frame,lost,x,y"""
+    def find(self,lower, upper, frame, currentFrame):
         lost = False
         
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -44,5 +44,4 @@ class ColorTracker(Tracker):
             
             # Bitwise-AND mask and original image
             #res = cv2.bitwise_and(frame,frame, mask= mask)
-        
         return frame,lost,x,y

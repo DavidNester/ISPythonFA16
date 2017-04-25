@@ -11,25 +11,27 @@ from PIL import Image, ImageTk
 import xlwt
 import cv2
 
-
-
 from InteractiveDataWindow import InteractiveDataWindow
 
+"""Parent Class for the main window GUI
+    Has all methods that are not specific to child classes (currently circle and color)
+"""
 class MainWindow(object):
 
+    """Constructor Method - creates window and initializes variables for playback"""
     def __init__(self):
-        self.root = Tk()
+        self.root = Tk()#create window
         self.root.withdraw()
         self.root = Toplevel()
         
         self.image_label = Label(master=self.root) #label for the video frame
         self.image_label.grid(row=0, column=0, columnspan=4)
    
-        self.init_buttons()
-   
-        # setup the update callback
-        self.root.after(0, func=self.update_all)
+        self.init_buttons() #create initial buttons to get info
+
+        self.root.after(0, func=self.update_all)# setup the update callback
     
+        #playback variables
         self.size = 0
         self.speed = 0
         self.currentFrame = 1
@@ -51,6 +53,7 @@ class MainWindow(object):
     
         self.update_image()
 
+    """Labels and inpute boxes for size and fps - info used for converting frames to seconds and pixels to centimeters"""
     def init_buttons(self):
         self.information = Label(master=self.root, text="Enter the Radius of the object (cm): ")
         self.information.grid(row=3, column=0, columnspan=2)
@@ -73,11 +76,12 @@ class MainWindow(object):
         self.reset = Button(master=self.root, text='Reset', bg = 'red', command = self.reset)
         self.reset.grid(row = 5, column = 2)
     
+    """method to receive fps and size data and initialize plot option input"""
     def submitData(self):
         try:
-            self.tracker.setSize(float(self.input.get()))
+            self.tracker.setSize(float(self.input.get())) #save data
             self.tracker.setFPS(float(self.fpsinput.get()))
-            self.information.destroy()
+            self.information.destroy()#destroy buttons
             self.input.destroy()
             self.fpsinput.destroy()
             self.fpsInfo.destroy()
@@ -104,6 +108,7 @@ class MainWindow(object):
         except:
             print "Try Again" #will update to a real message box
 
+    """creates buttons that allo playback control of the video as well as data viewing options"""
     def makePlaybackButtons(self):
         # pause button
         self.pauseButton = Button(master=self.root, text='Pause', command=self.pauseVideo)
@@ -131,9 +136,9 @@ class MainWindow(object):
         
         self.update_image()
 
-
+    """Displays results of plot choice"""
     def displayChoice(self):
-        self.holder.destroy()
+        self.holder.destroy() #destroy plotting buttons
         
         #enable clicking on the video
         self.image_label.bind('<Button-1>',self.on_mouse)
@@ -197,6 +202,7 @@ class MainWindow(object):
             self.update_image()
             self.root.after(0, func= self.update_all)
 
+    """export data to spreadsheet"""
     def exportData(self):
         workbook = xlwt.Workbook()
         worksheet = workbook.add_sheet('Data')
@@ -217,6 +223,7 @@ class MainWindow(object):
 
         
         #centimeters / pixel
+        #conversions taken care of somewhere else. I (David) will take care of this. Still need to add conversions to the sheet
         centConversion = (self.size*1.0)/(self.tracker.getRadius()*1.0)
         
         xdistance_cm = (self.tracker.xMax() - self.tracker.xMin()) * centConversion
@@ -253,12 +260,15 @@ class MainWindow(object):
         dy = (p1[1]-p2[1])*1.0
         return int((dx**2 + dy**2)**.5)
 
+    """main method that updates the GUI (image plots)"""
     def update_image(self):
-        print "Must be implemented by child"
+        print 'Must be implemented by child'
         pass
-    def on_mouse(self,event):
-        print "Must be implemented by child"
+    """Responds to mouse input (initial location of the circle"""
+    def on_mouse(self):
+        print 'Must be implemented by child'
         pass
+    """How to respond to the movement of the slider"""
     def moved(self):
-        print "Must be implemented by child"
+        print 'Must be implemented by child'
         pass
