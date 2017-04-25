@@ -20,7 +20,7 @@ class Tracker:
             return True
         oldX,oldY,oldR = self.coords[self.lastFrameWith]
         #make sure that the new circle agrees with the old circle
-        if abs(oldX-x) < oldR/2 and abs(oldY-y) < oldR/2 and abs(r-oldR) < oldR/2:
+        if abs(oldX-x) < oldR and abs(oldY-y) < oldR and abs(r-oldR) < oldR:
            return True
         return False
 

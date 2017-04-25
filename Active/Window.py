@@ -155,24 +155,32 @@ class MainWindow(object):
             if self.var.get()==1: #x
                 axis = self.f.add_subplot(111)
                 axis.set_xlim([0,len(self.video)])
+                axis.set_xlabel('frame')
                 axis.set_ylim([0,self.width])
+                axis.set_ylabel('x - pixel')
                 self.axes +=[axis]
                 self.lines = [self.axes[0].plot(self.tCoords,self.xCoords,'ro',animated=True)[0]]
             elif self.var.get() == 2: #y
                 axis = self.f.add_subplot(111)
                 axis.set_xlim([0,len(self.video)])
+                axis.set_xlabel('frame')
                 axis.set_ylim([0,self.height])
+                axis.set_ylabel('y - pixel')
                 self.axes +=[axis]
                 self.lines = [self.axes[0].plot(self.tCoords,self.yCoords,'ro',animated=True)[0]]
             elif self.var.get() == 3: #both
                 self.f = Figure(figsize=(10,5), dpi=100)
                 axis = self.f.add_subplot(121)
                 axis.set_xlim([0,len(self.video)])
+                axis.set_xlabel('frame')
                 axis.set_ylim([0,self.width])
+                axis.set_ylabel('x - pixel')
                 self.axes +=[axis]
                 axis = self.f.add_subplot(122)
                 axis.set_xlim([0,len(self.video)])
+                axis.set_xlabel('frame')
                 axis.set_ylim([0,self.height])
+                axis.set_ylabel('y - pixel')
                 self.axes += [axis]
                 self.lines = [self.axes[0].plot(self.tCoords,self.xCoords,'ro',animated=True)[0],self.axes[1].plot(self.tCoords,self.yCoords,'ro',animated=True)[0]]
             self.canvas = FigureCanvasTkAgg(self.f, master=self.root)
