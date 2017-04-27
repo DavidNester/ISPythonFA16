@@ -43,12 +43,13 @@ class ColorWindow(MainWindow):
            x,y,r = self.tracker.coords[self.currentFrame]
        
         #find new circles if new frame and not paused
-        elif not self.pause and self.first is not None:
+        elif not self.pause and self.first is None:
             fr,lost,x,y = self.tracker.find(self.lower_threshold,self.upper_threshold,self.frame,self.currentFrame)
+            
             if lost:
                 self.bottom.config(text='Circle is lost. Please click on the center')
                 self.pauseVideo()
-       
+        
         """Plots motion in matplotlib"""
         if self.plot and self.first is not None and x is not None:
             items = enumerate(zip(self.lines,self.axes,self.backgrounds),start = 1)
@@ -85,6 +86,9 @@ class ColorWindow(MainWindow):
     """give the lower and upper bounds for the HSV values"""
     def submitThreshold(self,lower, upper, master):
         self.tracker.find(lower,upper, self.frame,self.currentFrame)
+        self.lower_threshold = lower
+        self.upper_threshold = upper
+        self.makePlaybackButtons()
         master.destroy()
         self.bottom.config(text='')
         self.playVideo()
@@ -105,7 +109,7 @@ class ColorWindow(MainWindow):
         panel.image = final
         if self.start == False:
             mainloop()
-            start = True
+            self.start = True
         else:
             master.update()
 
@@ -168,4 +172,4 @@ class ColorWindow(MainWindow):
             upper_s.grid(row=6, column=1)
             upper_v.grid(row=7, column=1)
             Button(master, text='Submit', command=lambda: self.submitThreshold([lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], master)).grid(row=8, column=1, sticky=W, pady=4)
-            mainloop( )
+            self.updateHSV('hsv.jpg', [lower_h.get(), lower_s.get(), lower_v.get()], [upper_h.get(), upper_s.get(), upper_v.get()], panel,master)

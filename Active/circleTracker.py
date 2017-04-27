@@ -43,7 +43,7 @@ class CircleTracker(Tracker):
         if abs(currentFrame-self.lastFrameWith) > 10:
                 lost = True
         return lost,x,y,r
-    """converts image to simple black and white"""
+    """converts image to simple black and white and helps remove noise in background"""
     def processImage(self,frame):
         original = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #switch to grayscale
         retval, image = cv2.threshold(original, 50, 255, cv2.cv.CV_THRESH_BINARY)

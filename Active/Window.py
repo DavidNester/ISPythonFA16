@@ -57,25 +57,25 @@ class MainWindow(object):
     """Labels and inpute boxes for size and fps - info used for converting frames to seconds and pixels to centimeters"""
     def init_buttons(self):
         self.information = Label(master=self.root, text="Enter the Radius of the object (cm): ")
-        self.information.grid(row=3, column=0, columnspan=2)
+        self.information.grid(row=2, column=0, columnspan=2)
         
         self.input = Entry(master=self.root)
-        self.input.grid(row=3, column=2)
+        self.input.grid(row=2, column=2)
         
         self.fpsInfo = Label(master=self.root, text="Enter the Frames Per Second of the video: ")
-        self.fpsInfo.grid(row=4, column=0, columnspan=2)
+        self.fpsInfo.grid(row=3, column=0, columnspan=2)
         
         self.fpsinput = Entry(master=self.root)
-        self.fpsinput.grid(row=4, column=2)
+        self.fpsinput.grid(row=3, column=2)
         
         self.submit = Button(master=self.root, text='Submit', command=self.submitData)
-        self.submit.grid(row=4, column=3)
+        self.submit.grid(row=3, column=3)
         
         self.end = Button(master=self.root, text='End', bg = 'red', command= self.quit_)
-        self.end.grid(row = 5, column = 3)
+        self.end.grid(row = 4, column = 3)
         
         self.reset = Button(master=self.root, text='Reset', bg = 'red', command = self.reset)
-        self.reset.grid(row = 5, column = 2)
+        self.reset.grid(row = 4, column = 2)
     
     """method to receive fps and size data and initialize plot option input"""
     def submitData(self):
