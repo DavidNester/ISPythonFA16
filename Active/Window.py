@@ -207,10 +207,7 @@ class MainWindow(object):
 
     def update_all(self):
         self.old = self.currentFrame
-        if self.speed < 0:
-            time.sleep((self.speed*.1)*-1)#may need to find better way for this
-        elif self.speed > 0:
-            self.currentFrame = self.currentFrame + (1*self.speed)
+        self.currentFrame = self.currentFrame + (1*self.speed)
         if self.pause == False and self.currentFrame < len(self.video):
             self.currentFrame += 1
             self.w.set(self.currentFrame)
@@ -256,10 +253,12 @@ class MainWindow(object):
         self.pause = True
 
     def slowDown(self):
-        self.speed -= 1
+        if self.speed > 0:
+            self.speed -= 1
 
     def fastForward(self):
-        self.speed += 1
+        if self.speed < 5:
+            self.speed += 1
 
     def quit_(self):
         self.root.destroy()
@@ -285,5 +284,3 @@ class MainWindow(object):
     def moved(self):
         print 'Must be implemented by child'
         pass
-    def reset():
-        print 'this is wrong'

@@ -2,12 +2,16 @@ from Tkinter import *
 import tkFileDialog
 import matplotlib
 import numpy as np
+import numpy.polynomial.polynomial as poly
 #from scipy.interpolate import CubicSpline
 from scipy.interpolate import UnivariateSpline
+from scipy.optimize import curve_fit
+from scipy.signal import savgol_filter
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
+from math import factorial
 
 from circleTracker import CircleTracker
 
@@ -24,50 +28,58 @@ class InteractiveDataWindow:
 
     """make a button for each graph option"""
     def makeButtons(self):
+        reg = Label(master=self.data,text='Raw Coordinates')
+        fit = Label(master=self.data,text='Trendline')
+        scale = Label(master=self.data,text='Scaled Coordinates')
+        reg.grid(row = 0,column=0,columnspan=2)
+        fit.grid(row = 0,column=2,columnspan=2)
+        scale.grid(row = 0,column=4,columnspan=2)
+        
+        
         self.xButton = Button(master=self.data,text='x', command = lambda: self.plotData(self.tracker.getTCoords(),self.tracker.getXCoords(),1))
-        self.xButton.grid(row=0,column=0,columnspan=2)
+        self.xButton.grid(row=1,column=0,columnspan=2)
         
         self.yButton = Button(master=self.data,text='y', command = lambda: self.plotData(self.tracker.getTCoords(),self.tracker.getYCoords(),2))
-        self.yButton.grid(row=1,column=0,columnspan=2)
+        self.yButton.grid(row=2,column=0,columnspan=2)
         
         self.rButton = Button(master=self.data,text='r', command = lambda: self.plotData(self.tracker.getTCoords(),self.tracker.getRCoords(),3))
-        self.rButton.grid(row=2,column=0,columnspan=2)
+        self.rButton.grid(row=3,column=0,columnspan=2)
         
         self.xVelButton = Button(master=self.data,text='x Velocity', command = self.xVelData)
-        self.xVelButton.grid(row=3,column=0,columnspan=2)
+        self.xVelButton.grid(row=4,column=0,columnspan=2)
         
         self.yVelButton = Button(master=self.data,text='y Velocity', command = self.yVelData)
-        self.yVelButton.grid(row=4,column=0,columnspan=2)
+        self.yVelButton.grid(row=5,column=0,columnspan=2)
         
         self.xAccButton = Button(master=self.data,text='x Acceleration', command = self.xAccData)
-        self.xAccButton.grid(row=5,column=0,columnspan=2)
+        self.xAccButton.grid(row=6,column=0,columnspan=2)
         
         self.yAccButton = Button(master=self.data,text='y Acceleration', command = self.yAccData)
-        self.yAccButton.grid(row=6,column=0,columnspan=2)
+        self.yAccButton.grid(row=7,column=0,columnspan=2)
     
         self.fitXButton = Button(master=self.data,text='Fit X', command = self.fitX)
-        self.fitXButton.grid(row=0,column=2,columnspan=2)
+        self.fitXButton.grid(row=1,column=2,columnspan=2)
     
         self.fitYButton = Button(master=self.data,text='Fit Y', command = self.fitY)
-        self.fitYButton.grid(row=1,column=2,columnspan=2)
+        self.fitYButton.grid(row=2,column=2,columnspan=2)
     
         self.fitXVelButton = Button(master=self.data,text='Fit X Velocity', command = self.fitXVelocity)
-        self.fitXVelButton.grid(row=2,column=2,columnspan=2)
+        self.fitXVelButton.grid(row=3,column=2,columnspan=2)
         
         self.fitYVelButton = Button(master=self.data,text='Fit Y Velocity', command = self.fitYVelocity)
-        self.fitYVelButton.grid(row=3,column=2,columnspan=2)
+        self.fitYVelButton.grid(row=4,column=2,columnspan=2)
     
         self.scaleXButton = Button(master=self.data,text='Scale X', command = self.scaleX)
-        self.scaleXButton.grid(row=0,column=4,columnspan=2)
+        self.scaleXButton.grid(row=1,column=4,columnspan=2)
         
         self.scaleYButton = Button(master=self.data,text='Scale Y', command = self.scaleY)
-        self.scaleYButton.grid(row=1,column=4,columnspan=2)
+        self.scaleYButton.grid(row=2,column=4,columnspan=2)
         
         self.scaleXVelButton = Button(master=self.data,text='Scale X Velocity', command = self.scaleXVelocity)
-        self.scaleXVelButton.grid(row=2,column=4,columnspan=2)
+        self.scaleXVelButton.grid(row=3,column=4,columnspan=2)
         
         self.scaleYVelButton = Button(master=self.data,text='Scale Y Velocity', command = self.scaleYVelocity)
-        self.scaleYVelButton.grid(row=3,column=4,columnspan=2)
+        self.scaleYVelButton.grid(row=4,column=4,columnspan=2)
 
     """Plots data given a list of coordinates"""
     def plotData(self,x,y,num):
@@ -110,10 +122,8 @@ class InteractiveDataWindow:
 
     def trendline(self,x,y,num):
         plt.figure(num)
-        cs = UnivariateSpline(x,y)
-        plt.plot(x, cs(x), label="S")
-        #plt.plot(x, cs(x, 2), label="S''")
-        #plt.plot(x, cs(x, 3), label="S'''")
+        trend = savgol_filter(y,51,3)#trendline with
+        plt.plot(x,trend,'g')
         plt.show()
 
     def scaleX(self):
@@ -130,4 +140,3 @@ class InteractiveDataWindow:
         x,y = self.tracker.scaleYVelocity()
         self.plotData(x,y,15)
     """**********************************************************************"""
-

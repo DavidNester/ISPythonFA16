@@ -30,7 +30,10 @@ class CircleWindow(MainWindow):
 
     """updates the video, draws the circle, updates the plot"""
     def update_image(self):
-        self.frame = self.video[self.currentFrame]
+        try:
+            self.frame = self.video[self.currentFrame]
+        except:
+            pass
         x = None
         y = None
         r = None
